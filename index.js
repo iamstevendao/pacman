@@ -23,7 +23,7 @@ function init() {
 	w = canvas.width;
 	var cw = w / ROW_NUMBER;
 	const SIZE_BLOCK = w / GRID_SIZE;
-	var pacman = { x: 4, y: 4, direction: "right" };
+	var pacman = { x: 1, y: 1, direction: "right" };
 	var map = [];
 	var food = [];
 	var ghosts = [];
@@ -33,7 +33,7 @@ function init() {
 
 	initialize();
 	setInterval(updateFrame, 100);
-
+	//updateFrame();
 	function updateFrame() {
 		drawBackground();
 		updateMap();
@@ -41,7 +41,7 @@ function init() {
 		updatePacman();
 		updateGhosts();
 		updateScore();
-		console.log(ghosts[0].prev + " " + ghosts[0].direction);
+		//console.log(pacman.x + " " + pacman.y);
 	}
 	function initialize() {
 		generateMap();
@@ -53,15 +53,13 @@ function init() {
 		return obj[keys[keys.length * Math.random() << 0]];
 	};
 	function generateGhosts() {
-
-		// for (let i = 0; i < NUMBER_GHOSTS; i++) {
-		// 	let x = Math.floor(Math.random() * GHOST_AREA.w) + GHOST_AREA.x;
-		// 	let y = Math.floor(Math.random() * GHOST_AREA.h) + GHOST_AREA.y;
-		// 	let direction = randomProperty(DIRECTION);
-		// 	console.log("x: " + x + " y: " + y + " direction: " + direction);
-		// 	ghosts.push({ x: x, y: y, direction: direction, prev: direction });
-		// }
-
+		for (let i = 0; i < NUMBER_GHOSTS; i++) {
+			let x = Math.floor(Math.random() * GHOST_AREA.w) + GHOST_AREA.x;
+			let y = Math.floor(Math.random() * GHOST_AREA.h) + GHOST_AREA.y;
+			let direction = randomProperty(DIRECTION);
+			console.log("x: " + x + " y: " + y + " direction: " + direction);
+			ghosts.push({ x: x, y: y, direction: direction });
+		}
 	}
 	function updateGhosts() {
 		controlGhosts();
@@ -74,7 +72,8 @@ function init() {
 	}
 	function drawGhost(value) {
 		ctx.fillStyle = COLOR_GHOST;
-		ctx.fillRect((value.x - 1) * cw, (value.y - 1) * cw, SIZE_BLOCK, SIZE_BLOCK);
+		//console.log(value);
+		ctx.fillRect(value.x * SIZE_BLOCK, value.y * SIZE_BLOCK, SIZE_BLOCK, SIZE_BLOCK);
 	}
 	function controlGhosts() {
 		ghosts.forEach(value => {
@@ -107,7 +106,9 @@ function init() {
 		drawScore();
 		function controlScore() {
 			food.forEach((value, i) => {
-				if (pacman.x == value.x && pacman.y == value.y) {
+				let x = Math.round(pacman.x);
+				let y = Math.round(pacman.y);
+				if (x == value.x && y == value.y) {
 					score++;
 					food.splice(i, 1);
 				}
@@ -121,18 +122,20 @@ function init() {
 	}
 
 	function controlObject(obj, isGhost) {
-		let crashed = true;
 		let possibleDirection = [];
 		let index = 0;
 		Object.keys(DIRECTION).forEach(key => {
 			if (whereCantGo().indexOf(DIRECTION[key]) == -1)
 				possibleDirection.push(DIRECTION[key]);
 		});
-		if (possibleDirection.indexOf(obj.direction) != -1) {
+		if (isPossible(obj.direction)) {
 			if ((index = possibleDirection.indexOf(opositeOf(obj.direction))) != -1)
 				possibleDirection.splice(index, 1);
 		}
-		obj.direction = possibleDirection[Math.floor(Math.random() * possibleDirection.length)];
+		if (isGhost && Number.isInteger(obj.x) && Number.isInteger(obj.y)) {
+			console.log(possibleDirection.length)
+			obj.direction = possibleDirection[Math.floor(Math.random() * possibleDirection.length)];
+		}
 		function opositeOf(x) {
 			switch (x) {
 				case DIRECTION.l:
@@ -145,44 +148,45 @@ function init() {
 					return DIRECTION.u;
 			}
 		}
+		//console.log(possibleDirection)
 		// possibleDirection.forEach((value, i) => {
 		// 	if (whereCantGo().indexOf(value) > - 1) {
 		// 		possibleDirection.splice(i, 1);
 		// 	}
 		// });
 		//console.log(possibleDirection);
+		function isPossible(x) {
+			return possibleDirection.indexOf(x) == -1 ? false : true;
+		}
+
 		switch (obj.direction) {
 			case DIRECTION.r:
-				//if (!(crashed = isCrashed(obj.x + 2, obj.y))) {
-				if (isAligned(PACMAN_Y))
-					obj.x--;
-				obj.x++;
-				possibleDirection.splice(possibleDirection.indexOf(DIRECTION.l), 1);
-				//}
+				if (isPossible(DIRECTION.r)) {
+					obj.x += 1 / 4;
+					obj.y = Math.round(obj.y);
+					//possibleDirection.splice(possibleDirection.indexOf(DIRECTION.l), 1);
+				}
 				break;
 			case DIRECTION.l:
-				//if (!(crashed = isCrashed(obj.x - 2, obj.y))) {
-				if (isAligned(PACMAN_Y))
-					obj.x++;
-				obj.x--;
-				possibleDirection.splice(possibleDirection.indexOf(DIRECTION.r), 1);
-				//}
+				if (isPossible(DIRECTION.l)) {
+					obj.x -= 1 / 4;
+					obj.y = Math.round(obj.y);
+					//possibleDirection.splice(possibleDirection.indexOf(DIRECTION.r), 1);
+				}
 				break;
 			case DIRECTION.u:
-				//if (!(crashed = isCrashed(obj.x, obj.y - 2))) {
-				if (isAligned(PACMAN_X))
-					obj.y++;
-				obj.y--;
-				possibleDirection.splice(possibleDirection.indexOf(DIRECTION.d), 1);
-				//}
+				if (isPossible(DIRECTION.u)) {
+					obj.y -= 1 / 4;
+					obj.x = Math.round(obj.x);
+					//possibleDirection.splice(possibleDirection.indexOf(DIRECTION.d), 1);
+				}
 				break;
 			case DIRECTION.d:
-				//if (!(crashed = isCrashed(obj.x, obj.y + 2))) {
-				if (isAligned(PACMAN_X))
-					obj.y--;
-				obj.y++;
-				possibleDirection.splice(possibleDirection.indexOf(DIRECTION.u), 1);
-				//}
+				if (isPossible(DIRECTION.d)) {
+					obj.y += 1 / 4;
+					obj.x = Math.round(obj.x);
+					//possibleDirection.splice(possibleDirection.indexOf(DIRECTION.u), 1);
+				}
 				break;
 		}
 		// if (isGhost) {
@@ -203,43 +207,38 @@ function init() {
 		// }
 		function whereCantGo() {
 			let direction = [];
-			if (isCrashed(obj.x + 2, obj.y))
+			if (isCrashed(obj.x + 1, obj.y))
 				direction.push(DIRECTION.r);
-			if (isCrashed(obj.x - 2, obj.y))
+			if (isCrashed(obj.x - 1, obj.y))
 				direction.push(DIRECTION.l);
-			if (isCrashed(obj.x, obj.y - 2))
+			if (isCrashed(obj.x, obj.y - 1))
 				direction.push(DIRECTION.u);
-			if (isCrashed(obj.x, obj.y + 2))
+			if (isCrashed(obj.x, obj.y + 1))
 				direction.push(DIRECTION.d);
-			console.log("where cant go: " + direction.length);
+			//console.log("where cant go: " + direction.length);
 			return direction;
 		}
 		function isCrashed(x, y) {
+			//let xt = Math.round(x);
+			//let yt = Math.round(y);
+			// console.log("BEFORE: " + x + " " + y);
+			// x = Math.ceil(x);
+			// y = Math.ceil(y);
+			// console.log("AFTER: " + x + " " + y);
 			return map.some(value => (value.x == x && value.y == y));
-		}
-
-		function isAligned(value) {
-			if (value == PACMAN_X) {
-				if (obj.x % 3 == 0) { obj.x++; return true; }
-				if (obj.x % 3 == 2) { obj.x--; return true; }
-			} else {
-				if (obj.y % 3 == 0) { obj.y++; return true; }
-				if (obj.y % 3 == 2) { obj.y--; return true; }
-			}
-			return false;
 		}
 	}
 	function drawPacman() {
 		ctx.beginPath();
-		ctx.arc(pacman.x * cw + cw / 2 + MARGIN_PACMAN, pacman.y * cw + cw / 2 + MARGIN_PACMAN, SIZE_BLOCK / 2 - MARGIN_PACMAN * 2, 0.25 * Math.PI, 1.25 * Math.PI, false);
+		ctx.arc(pacman.x * SIZE_BLOCK + SIZE_BLOCK / 2 + MARGIN_PACMAN, pacman.y * SIZE_BLOCK + SIZE_BLOCK / 2 + MARGIN_PACMAN, SIZE_BLOCK / 2 - MARGIN_PACMAN * 2, 0.25 * Math.PI, 1.25 * Math.PI, false);
 		ctx.fillStyle = COLOR_PACMAN;
 		ctx.fill();
 		ctx.beginPath();
-		ctx.arc(pacman.x * cw + cw / 2 + MARGIN_PACMAN, pacman.y * cw + cw / 2 + MARGIN_PACMAN, SIZE_BLOCK / 2 - MARGIN_PACMAN * 2, 0.75 * Math.PI, 1.75 * Math.PI, false);
+		ctx.arc(pacman.x * SIZE_BLOCK + SIZE_BLOCK / 2 + MARGIN_PACMAN, pacman.y * SIZE_BLOCK + SIZE_BLOCK / 2 + MARGIN_PACMAN, SIZE_BLOCK / 2 - MARGIN_PACMAN * 2, 0.75 * Math.PI, 1.75 * Math.PI, false);
 		ctx.fill();
 		ctx.beginPath();
-		ctx.arc(pacman.x * cw + cw / 2 + MARGIN_PACMAN, pacman.y * cw - cw / 3 + MARGIN_PACMAN, cw / 4 - 0.5, 0, 2 * Math.PI, false);
-		ctx.fillStyle = COLOR_BACKGROUND;
+		ctx.arc(pacman.x * SIZE_BLOCK + SIZE_BLOCK / 2, pacman.y * SIZE_BLOCK + SIZE_BLOCK / 4, SIZE_BLOCK / 9, 0, 2 * Math.PI, false);
+		ctx.fillStyle = COLOR_FOOD;
 		ctx.fill();
 	}
 
@@ -270,7 +269,7 @@ function init() {
 		generateOthers(6, 8);
 		pushIntoMap({ x: 6, y: 9 });
 		pushIntoMap({ x: GRID_SIZE - 6 - 1, y: 9 });
-		pushIntoMap({ x: 9, y: 7 });
+		//pushIntoMap({ x: 9, y: 7 });
 		for (let i = 8; i < 8 + 3; i++) {
 			pushIntoMap({ x: i, y: 11 });
 		}
@@ -284,7 +283,7 @@ function init() {
 			//for (let i = value.x; i <= value.x + 2; i++) {
 			//for (let j = value.y; j <= value.y + 2; j++) {
 			map.push({ x: value.x, y: value.y });
-			console.log("putted: " + value.x + " " + value.y);
+			//console.log("putted: " + value.x + " " + value.y);
 			//}
 			//}
 		}
@@ -324,16 +323,19 @@ function init() {
 		switch (e.keyCode) {
 			case 37:
 				pacman.direction = DIRECTION.l;
+				pacman.y = Math.round(pacman.y);
 				break;
 			case 38:
 				pacman.direction = DIRECTION.u;
+				pacman.x = Math.round(pacman.x);
 				break;
 			case 39:
 				pacman.direction = DIRECTION.r;
+				pacman.y = Math.round(pacman.y);
 				break;
 			case 40:
 				pacman.direction = DIRECTION.d;
-				break;
+				pacman.x = Math.round(pacman.x);
 			case 32:
 				console.log("space pressed");
 
