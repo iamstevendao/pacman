@@ -1,16 +1,14 @@
 function init() {
 	var canvas = document.getElementById('root');
-	const ROW_NUMBER = 57;
-	const COLOR_BORDER = "#aaaaaa";
 	const COLOR_BACKGROUND = "#000000";
 	const COLOR_PACMAN = "#990000";
 	const COLOR_GHOST = "#993333";
 	const COLOR_MAP = "#000099";
 	const COLOR_FOOD = "#999999";
-	const SIZE_UNIT = 3;
 	const MARGIN_PACMAN = 1;
-	const GRID_HEIGHT = 19;
-	const GRID_WIDTH = 19;
+	const STEP = 5;
+	const GRID_SIZE = 19;
+	const ROW_NUMBER = GRID_SIZE * STEP;
 	const FOOD = "food";
 	const BLOCK = "block";
 	const PACMAN_X = "x";
@@ -24,7 +22,7 @@ function init() {
 	canvas.height = canvas.width;
 	w = canvas.width;
 	var cw = w / ROW_NUMBER;
-	const SIZE_BLOCK = SIZE_UNIT * cw;
+	const SIZE_BLOCK = w / GRID_SIZE;
 	var pacman = { x: 4, y: 4, direction: "right" };
 	var map = [];
 	var food = [];
@@ -56,13 +54,13 @@ function init() {
 	};
 	function generateGhosts() {
 
-		for (let i = 0; i < NUMBER_GHOSTS; i++) {
-			let x = Math.floor(Math.random() * GHOST_AREA.w * SIZE_UNIT) + GHOST_AREA.x * SIZE_UNIT;
-			let y = Math.floor(Math.random() * GHOST_AREA.h * SIZE_UNIT) + GHOST_AREA.y * SIZE_UNIT;
-			let direction = randomProperty(DIRECTION);
-			console.log("x: " + x + " y: " + y + " direction: " + direction);
-			ghosts.push({ x: x, y: y, direction: direction, prev: direction });
-		}
+		// for (let i = 0; i < NUMBER_GHOSTS; i++) {
+		// 	let x = Math.floor(Math.random() * GHOST_AREA.w) + GHOST_AREA.x;
+		// 	let y = Math.floor(Math.random() * GHOST_AREA.h) + GHOST_AREA.y;
+		// 	let direction = randomProperty(DIRECTION);
+		// 	console.log("x: " + x + " y: " + y + " direction: " + direction);
+		// 	ghosts.push({ x: x, y: y, direction: direction, prev: direction });
+		// }
 
 	}
 	function updateGhosts() {
@@ -84,16 +82,16 @@ function init() {
 		})
 	}
 	function generateFood() {
-		console.log(map.length);
-		for (let i = 0; i < GRID_WIDTH * SIZE_UNIT; i++) {
-			for (let j = 0; j < GRID_HEIGHT * SIZE_UNIT; j++) {
-				if (i % 3 == 1 && j % 3 == 1 && !map.some(value => (
-					value.x == i && value.y == j
-				))) {
-					food.push({ x: i, y: j });
-				}
-			}
-		}
+		// console.log(map.length);
+		// for (let i = 0; i < GRID_SIZE; i++) {
+		// 	for (let j = 0; j < GRID_SIZE; j++) {
+		// 		if (i % 3 == 1 && j % 3 == 1 && !map.some(value => (
+		// 			value.x == i && value.y == j
+		// 		))) {
+		// 			food.push({ x: i, y: j });
+		// 		}
+		// 	}
+		// }
 	}
 
 	function updateFood() {
@@ -157,36 +155,36 @@ function init() {
 		//console.log(possibleDirection);
 		switch (obj.direction) {
 			case DIRECTION.r:
-				if (!(crashed = isCrashed(obj.x + 2, obj.y))) {
-					if (isAligned(PACMAN_Y))
-						obj.x--;
-					obj.x++;
-					possibleDirection.splice(possibleDirection.indexOf(DIRECTION.l), 1);
-				}
+				//if (!(crashed = isCrashed(obj.x + 2, obj.y))) {
+				if (isAligned(PACMAN_Y))
+					obj.x--;
+				obj.x++;
+				possibleDirection.splice(possibleDirection.indexOf(DIRECTION.l), 1);
+				//}
 				break;
 			case DIRECTION.l:
-				if (!(crashed = isCrashed(obj.x - 2, obj.y))) {
-					if (isAligned(PACMAN_Y))
-						obj.x++;
-					obj.x--;
-					possibleDirection.splice(possibleDirection.indexOf(DIRECTION.r), 1);
-				}
+				//if (!(crashed = isCrashed(obj.x - 2, obj.y))) {
+				if (isAligned(PACMAN_Y))
+					obj.x++;
+				obj.x--;
+				possibleDirection.splice(possibleDirection.indexOf(DIRECTION.r), 1);
+				//}
 				break;
 			case DIRECTION.u:
-				if (!(crashed = isCrashed(obj.x, obj.y - 2))) {
-					if (isAligned(PACMAN_X))
-						obj.y++;
-					obj.y--;
-					possibleDirection.splice(possibleDirection.indexOf(DIRECTION.d), 1);
-				}
+				//if (!(crashed = isCrashed(obj.x, obj.y - 2))) {
+				if (isAligned(PACMAN_X))
+					obj.y++;
+				obj.y--;
+				possibleDirection.splice(possibleDirection.indexOf(DIRECTION.d), 1);
+				//}
 				break;
 			case DIRECTION.d:
-				if (!(crashed = isCrashed(obj.x, obj.y + 2))) {
-					if (isAligned(PACMAN_X))
-						obj.y--;
-					obj.y++;
-					possibleDirection.splice(possibleDirection.indexOf(DIRECTION.u), 1);
-				}
+				//if (!(crashed = isCrashed(obj.x, obj.y + 2))) {
+				if (isAligned(PACMAN_X))
+					obj.y--;
+				obj.y++;
+				possibleDirection.splice(possibleDirection.indexOf(DIRECTION.u), 1);
+				//}
 				break;
 		}
 		// if (isGhost) {
@@ -248,10 +246,10 @@ function init() {
 	}
 
 	function generateMap() {
-		for (let i = 0; i < GRID_WIDTH / 2; i++) {
+		for (let i = 0; i < GRID_SIZE / 2; i++) {
 			generateOthers(i, 0);
 		}
-		for (let i = 1; i < GRID_HEIGHT / 2; i++) {
+		for (let i = 1; i < GRID_SIZE / 2; i++) {
 			generateOthers(0, i);
 		}
 		for (let i = 2; i < 2 + 5; i++) {
@@ -273,23 +271,24 @@ function init() {
 		generateOthers(6, 7);
 		generateOthers(6, 8);
 		pushIntoMap({ x: 6, y: 9 });
-		pushIntoMap({ x: GRID_WIDTH - 6 - 1, y: 9 });
+		pushIntoMap({ x: GRID_SIZE - 6 - 1, y: 9 });
 		pushIntoMap({ x: 9, y: 7 });
 		for (let i = 8; i < 8 + 3; i++) {
 			pushIntoMap({ x: i, y: 11 });
 		}
 		function generateOthers(x, y) {
 			pushIntoMap({ x: x, y: y });
-			pushIntoMap({ x: GRID_WIDTH - x - 1, y: y });
-			pushIntoMap({ x: x, y: GRID_HEIGHT - y - 1 });
-			pushIntoMap({ x: GRID_WIDTH - x - 1, y: GRID_HEIGHT - y - 1 });
+			pushIntoMap({ x: GRID_SIZE - x - 1, y: y });
+			pushIntoMap({ x: x, y: GRID_SIZE - y - 1 });
+			pushIntoMap({ x: GRID_SIZE - x - 1, y: GRID_SIZE - y - 1 });
 		}
 		function pushIntoMap(value) {
-			for (let i = value.x * SIZE_UNIT; i <= value.x * SIZE_UNIT + 2; i++) {
-				for (let j = value.y * SIZE_UNIT; j <= value.y * SIZE_UNIT + 2; j++) {
-					map.push({ x: i, y: j });
-				}
-			}
+			//for (let i = value.x; i <= value.x + 2; i++) {
+			//for (let j = value.y; j <= value.y + 2; j++) {
+			map.push({ x: value.x, y: value.y });
+			console.log("putted: " + value.x + " " + value.y);
+			//}
+			//}
 		}
 	}
 
@@ -313,7 +312,7 @@ function init() {
 		switch (ele) {
 			case BLOCK:
 				ctx.fillStyle = COLOR_MAP;
-				ctx.fillRect(x * cw, y * cw, cw, cw);
+				ctx.fillRect(x * SIZE_BLOCK, y * SIZE_BLOCK, SIZE_BLOCK, SIZE_BLOCK);
 				break;
 			case FOOD:
 				ctx.fillStyle = COLOR_FOOD;
