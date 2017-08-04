@@ -82,16 +82,14 @@ function init() {
 		})
 	}
 	function generateFood() {
-		// console.log(map.length);
-		// for (let i = 0; i < GRID_SIZE; i++) {
-		// 	for (let j = 0; j < GRID_SIZE; j++) {
-		// 		if (i % 3 == 1 && j % 3 == 1 && !map.some(value => (
-		// 			value.x == i && value.y == j
-		// 		))) {
-		// 			food.push({ x: i, y: j });
-		// 		}
-		// 	}
-		// }
+		for (let i = 0; i < GRID_SIZE; i++) {
+			for (let j = 0; j < GRID_SIZE; j++) {
+				if (!map.some(value => (
+					value.x == i && value.y == j))) {
+					food.push({ x: i, y: j });
+				}
+			}
+		}
 	}
 
 	function updateFood() {
@@ -316,7 +314,7 @@ function init() {
 				break;
 			case FOOD:
 				ctx.fillStyle = COLOR_FOOD;
-				ctx.fillRect(x * cw + cw / 2 - cw / 2, y * cw + cw / 2 - cw / 2, cw, cw);
+				ctx.fillRect(x * SIZE_BLOCK + SIZE_BLOCK / 3, y * SIZE_BLOCK + SIZE_BLOCK / 3, SIZE_BLOCK / 3, SIZE_BLOCK / 3);
 				break;
 
 		}
