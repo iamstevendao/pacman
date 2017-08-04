@@ -43,6 +43,13 @@ function init() {
 		updateScore();
 		//console.log(pacman.x + " " + pacman.y);
 	}
+	function reset() {
+		map = [];
+		food = [];
+		ghosts = [];
+		pacman = { x: 1, y: 1, direction: "right" };
+		initialize();
+	}
 	function initialize() {
 		generateMap();
 		generateFood();
@@ -113,6 +120,14 @@ function init() {
 					food.splice(i, 1);
 				}
 			});
+			ghosts.forEach(value => {
+				console.log("x: " + value.x + " " + pacman.x + " y: " + value.y + " " + pacman.y);
+				if (Math.ceil(value.x) == Math.ceil(pacman.x) && Math.ceil(value.y) == Math.ceil(pacman.y) || Math.floor(value.x) == Math.floor(pacman.x) && Math.floor(value.y) == Math.floor(pacman.y)) {
+					reset();
+					score = 0;
+					console.log("game over");
+				}
+			})
 		}
 		function drawScore() {
 			ctx.fillStyle = COLOR_FOOD;
