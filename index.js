@@ -2,6 +2,7 @@ function init() {
 	var canvas = document.getElementById('root');
 	const COLOR_BACKGROUND = "#000000";
 	const COLOR_PACMAN = "#990000";
+	const COLOR_POWER = "#ff0000"
 	const COLOR_GHOST = "#993333";
 	const COLOR_MAP = "#000099";
 	const COLOR_FOOD = "#999999";
@@ -17,6 +18,7 @@ function init() {
 	const NUMBER_GHOSTS = 3;
 	const NUMBER_CHERRY = 5;
 	const INTERVAL = 100;
+	const TIME_POWER = INTERVAL * 50;
 
 	var ctx = canvas.getContext("2d");
 	var w = window.innerWidth;
@@ -26,16 +28,17 @@ function init() {
 	w = canvas.width;
 	var cw = w / ROW_NUMBER;
 	const SIZE_BLOCK = w / GRID_SIZE;
-	var pacman = { x: 1, y: 1, direction: "right" };
+	var pacman = {};
 	var map = [];
 	var food = [];
 	var ghosts = [];
 	var cherries = [];
+	var isOpen = false;
 	const GHOST_AREA = { x: 7, y: 8, w: 5, h: 3 };
 	const DIRECTION = { l: "left", r: "right", u: "up", d: "down" };
 	var score = 0;
 
-	initialize();
+	reset();
 	setInterval(updateFrame, INTERVAL);
 	//updateFrame();
 	function updateFrame() {
@@ -49,11 +52,15 @@ function init() {
 		//console.log(pacman.x + " " + pacman.y);
 	}
 	function reset() {
-		map = [];
-		food = [];
-		ghosts = [];
-		pacman = { x: 1, y: 1, direction: "right" };
+		toDefault();
 		initialize();
+		function toDefault() {
+			map = [];
+			food = [];
+			ghosts = [];
+			cherries = [];
+			pacman = { x: 1, y: 1, direction: "right", power: 0 };
+		}
 	}
 	function initialize() {
 		generateMap();
@@ -84,11 +91,7 @@ function init() {
 		}
 	}
 	function updateCherries() {
-		controlCherries();
 		drawCherries();
-
-		function controlCherries() {
-		}
 		function drawCherries() {
 			ctx.fillStyle = COLOR_CHERRY;
 			cherries.forEach(cherry => {
@@ -140,6 +143,7 @@ function init() {
 		controlScore();
 		drawScore();
 		function controlScore() {
+			//pacman eats food
 			food.forEach((value, i) => {
 				let x = Math.round(pacman.x);
 				let y = Math.round(pacman.y);
@@ -148,12 +152,27 @@ function init() {
 					food.splice(i, 1);
 				}
 			});
-			ghosts.forEach(value => {
-				//	console.log("x: " + value.x + " " + pacman.x + " y: " + value.y + " " + pacman.y);
+
+			//pacman crashes ghost
+			ghosts.forEach((value, index) => {
 				if (Math.ceil(value.x) == Math.ceil(pacman.x) && Math.ceil(value.y) == Math.ceil(pacman.y) || Math.floor(value.x) == Math.floor(pacman.x) && Math.floor(value.y) == Math.floor(pacman.y)) {
-					reset();
-					score = 0;
-					console.log("game over");
+					if (pacman.power < 0) {
+						reset();
+						score = 0;
+						console.log("game over");
+					} else {
+						ghosts.splice(index, 1);
+						score += 10;
+					}
+				}
+			});
+
+			//pacman eats cherry
+			cherries.forEach((cherry, index) => {
+				if (cherry.x == pacman.x && cherry.y == pacman.y) {
+					pacman.power = TIME_POWER;
+					cherries.splice(index, 1);
+					score += 5;
 				}
 			});
 		}
@@ -178,6 +197,10 @@ function init() {
 		if (isGhost && Number.isInteger(obj.x) && Number.isInteger(obj.y)) {
 			console.log(possibleDirection.length)
 			obj.direction = possibleDirection[Math.floor(Math.random() * possibleDirection.length)];
+		}
+		if (!isGhost) {
+			obj.power -= INTERVAL;
+			isOpen = !isOpen;
 		}
 		function opositeOf(x) {
 			switch (x) {
@@ -239,17 +262,70 @@ function init() {
 		}
 	}
 	function drawPacman() {
+		let color = pacman.power < 0 ? COLOR_PACMAN : COLOR_POWER;
+		let margin = pacman.power < 0 ? MARGIN_PACMAN : -MARGIN_PACMAN;
+		let angle = isOpen ? getAngle() : { startMouth: 0, endMouth: Math.PI, startHead: Math.PI, endHead: 0 };
+		let eye = getEye();
+
 		ctx.beginPath();
-		ctx.arc(pacman.x * SIZE_BLOCK + SIZE_BLOCK / 2 + MARGIN_PACMAN, pacman.y * SIZE_BLOCK + SIZE_BLOCK / 2 + MARGIN_PACMAN, SIZE_BLOCK / 2 - MARGIN_PACMAN * 2, 0.25 * Math.PI, 1.25 * Math.PI, false);
-		ctx.fillStyle = COLOR_PACMAN;
+		ctx.arc(pacman.x * SIZE_BLOCK + SIZE_BLOCK / 2 + margin, pacman.y * SIZE_BLOCK + SIZE_BLOCK / 2 + margin, SIZE_BLOCK / 2 - margin * 2, angle.startMouth, angle.endMouth, false);
+		ctx.fillStyle = color;
 		ctx.fill();
 		ctx.beginPath();
-		ctx.arc(pacman.x * SIZE_BLOCK + SIZE_BLOCK / 2 + MARGIN_PACMAN, pacman.y * SIZE_BLOCK + SIZE_BLOCK / 2 + MARGIN_PACMAN, SIZE_BLOCK / 2 - MARGIN_PACMAN * 2, 0.75 * Math.PI, 1.75 * Math.PI, false);
+		ctx.arc(pacman.x * SIZE_BLOCK + SIZE_BLOCK / 2 + margin, pacman.y * SIZE_BLOCK + SIZE_BLOCK / 2 + margin, SIZE_BLOCK / 2 - margin * 2, angle.startHead, angle.endHead, false);
 		ctx.fill();
 		ctx.beginPath();
-		ctx.arc(pacman.x * SIZE_BLOCK + SIZE_BLOCK / 2, pacman.y * SIZE_BLOCK + SIZE_BLOCK / 4, SIZE_BLOCK / 9, 0, 2 * Math.PI, false);
+		ctx.arc(eye.x, eye.y, SIZE_BLOCK / 10, 0, 2 * Math.PI, false);
 		ctx.fillStyle = COLOR_FOOD;
 		ctx.fill();
+
+		function getEye() {
+			let eye = {};
+			const base = { x: pacman.x * SIZE_BLOCK, y: pacman.y * SIZE_BLOCK };
+			switch (pacman.direction) {
+				case DIRECTION.r:
+				case DIRECTION.l:
+					eye.x = base.x + SIZE_BLOCK / 2;
+					eye.y = base.y + SIZE_BLOCK / 4;
+					break;
+				case DIRECTION.u:
+					eye.x = base.x + SIZE_BLOCK / 4;
+					eye.y = base.y + SIZE_BLOCK / 2;
+					break;
+				case DIRECTION.d:
+					eye.x = base.x + SIZE_BLOCK * 3 / 4;
+					eye.y = base.y + SIZE_BLOCK / 2;
+					break;
+			}
+			return eye;
+		}
+		function getAngle() {
+			let angle = { startMouth: Math.PI, endMouth: Math.PI, startHead: Math.PI, endHead: Math.PI };
+			let mouth = 0, head = 0;
+			switch (pacman.direction) {
+				case DIRECTION.r:
+					mouth = 0.25;
+					head = 0.75
+					break;
+				case DIRECTION.l:
+					mouth = 1.75;
+					head = 1.25
+					break;
+				case DIRECTION.u:
+					mouth = 0.25;
+					head = 1.75;
+					break;
+				case DIRECTION.d:
+					mouth = 0.75;
+					head = 1.25;
+					break;
+			}
+			angle.startMouth *= mouth;
+			angle.endMouth *= mouth > 1 ? mouth - 1 : mouth + 1;
+			angle.startHead *= head;
+			angle.endHead *= head > 1 ? head - 1 : head + 1;
+			return angle;
+		}
 	}
 
 	function generateMap() {
