@@ -5,6 +5,7 @@ function init() {
 	const COLOR_GHOST = "#993333";
 	const COLOR_MAP = "#000099";
 	const COLOR_FOOD = "#999999";
+	const COLOR_CHERRY = "#ffffff";
 	const MARGIN_PACMAN = 1;
 	const STEP = 5;
 	const GRID_SIZE = 19;
@@ -14,6 +15,8 @@ function init() {
 	const PACMAN_X = "x";
 	const PACMAN_Y = "y";
 	const NUMBER_GHOSTS = 3;
+	const NUMBER_CHERRY = 5;
+	const INTERVAL = 100;
 
 	var ctx = canvas.getContext("2d");
 	var w = window.innerWidth;
@@ -27,17 +30,19 @@ function init() {
 	var map = [];
 	var food = [];
 	var ghosts = [];
+	var cherries = [];
 	const GHOST_AREA = { x: 7, y: 8, w: 5, h: 3 };
 	const DIRECTION = { l: "left", r: "right", u: "up", d: "down" };
 	var score = 0;
 
 	initialize();
-	setInterval(updateFrame, 100);
+	setInterval(updateFrame, INTERVAL);
 	//updateFrame();
 	function updateFrame() {
 		drawBackground();
 		updateMap();
 		updateFood();
+		updateCherries();
 		updatePacman();
 		updateGhosts();
 		updateScore();
@@ -53,6 +58,7 @@ function init() {
 	function initialize() {
 		generateMap();
 		generateFood();
+		generateCherry();
 		generateGhosts();
 	}
 	function randomProperty(obj) {
@@ -66,6 +72,28 @@ function init() {
 			let direction = randomProperty(DIRECTION);
 			console.log("x: " + x + " y: " + y + " direction: " + direction);
 			ghosts.push({ x: x, y: y, direction: direction });
+		}
+	}
+	function generateCherry() {
+		for (let i = 0; i < NUMBER_CHERRY; i++) {
+			let cher = food[Math.floor(Math.random() * food.length)];
+			if (!cherries.some(value => (value.x == cher.x && value.y == cher.y)))
+				cherries.push({ x: cher.x, y: cher.y });
+			else
+				i--;
+		}
+	}
+	function updateCherries() {
+		controlCherries();
+		drawCherries();
+
+		function controlCherries() {
+		}
+		function drawCherries() {
+			ctx.fillStyle = COLOR_CHERRY;
+			cherries.forEach(cherry => {
+				ctx.fillRect(cherry.x * SIZE_BLOCK, cherry.y * SIZE_BLOCK, SIZE_BLOCK, SIZE_BLOCK);
+			});
 		}
 	}
 	function updateGhosts() {
@@ -121,13 +149,13 @@ function init() {
 				}
 			});
 			ghosts.forEach(value => {
-				console.log("x: " + value.x + " " + pacman.x + " y: " + value.y + " " + pacman.y);
+				//	console.log("x: " + value.x + " " + pacman.x + " y: " + value.y + " " + pacman.y);
 				if (Math.ceil(value.x) == Math.ceil(pacman.x) && Math.ceil(value.y) == Math.ceil(pacman.y) || Math.floor(value.x) == Math.floor(pacman.x) && Math.floor(value.y) == Math.floor(pacman.y)) {
 					reset();
 					score = 0;
 					console.log("game over");
 				}
-			})
+			});
 		}
 		function drawScore() {
 			ctx.fillStyle = COLOR_FOOD;
@@ -163,13 +191,6 @@ function init() {
 					return DIRECTION.u;
 			}
 		}
-		//console.log(possibleDirection)
-		// possibleDirection.forEach((value, i) => {
-		// 	if (whereCantGo().indexOf(value) > - 1) {
-		// 		possibleDirection.splice(i, 1);
-		// 	}
-		// });
-		//console.log(possibleDirection);
 		function isPossible(x) {
 			return possibleDirection.indexOf(x) == -1 ? false : true;
 		}
@@ -179,47 +200,27 @@ function init() {
 				if (isPossible(DIRECTION.r)) {
 					obj.x += 1 / 4;
 					obj.y = Math.round(obj.y);
-					//possibleDirection.splice(possibleDirection.indexOf(DIRECTION.l), 1);
 				}
 				break;
 			case DIRECTION.l:
 				if (isPossible(DIRECTION.l)) {
 					obj.x -= 1 / 4;
 					obj.y = Math.round(obj.y);
-					//possibleDirection.splice(possibleDirection.indexOf(DIRECTION.r), 1);
 				}
 				break;
 			case DIRECTION.u:
 				if (isPossible(DIRECTION.u)) {
 					obj.y -= 1 / 4;
 					obj.x = Math.round(obj.x);
-					//possibleDirection.splice(possibleDirection.indexOf(DIRECTION.d), 1);
 				}
 				break;
 			case DIRECTION.d:
 				if (isPossible(DIRECTION.d)) {
 					obj.y += 1 / 4;
 					obj.x = Math.round(obj.x);
-					//possibleDirection.splice(possibleDirection.indexOf(DIRECTION.u), 1);
 				}
 				break;
 		}
-		// if (isGhost) {
-		// 	if (crashed) {
-		// 		if (obj.prev != null) {
-		// 			obj.direction = obj.prev;
-		// 		} else {
-		// 			obj.direction = randomProperty(DIRECTION);
-		// 		}
-		// 		obj.prev = null;
-		// 	} else {
-		// 		obj.prev = obj.direction;
-
-		// 		console.log("possible: " + possibleDirection.length);
-		// 		obj.direction = possibleDirection[Math.floor(Math.random() * possibleDirection.length)];
-		// 		//console.log(Math.floor(Math.random() * possibleDirection.length));
-		// 	}
-		// }
 		function whereCantGo() {
 			let direction = [];
 			if (isCrashed(obj.x + 1, obj.y))
@@ -234,12 +235,6 @@ function init() {
 			return direction;
 		}
 		function isCrashed(x, y) {
-			//let xt = Math.round(x);
-			//let yt = Math.round(y);
-			// console.log("BEFORE: " + x + " " + y);
-			// x = Math.ceil(x);
-			// y = Math.ceil(y);
-			// console.log("AFTER: " + x + " " + y);
 			return map.some(value => (value.x == x && value.y == y));
 		}
 	}
