@@ -3,7 +3,7 @@ function init() {
 	const COLOR_BACKGROUND = "#000000";
 	const COLOR_PACMAN = "#990000";
 	const COLOR_POWER = "#ff0000"
-	const COLOR_GHOST = "#993333";
+	//const COLOR_GHOST = "#993333";
 	const COLOR_MAP = "#000099";
 	const COLOR_FOOD = "#999999";
 	const COLOR_CHERRY = "#ffffff";
@@ -15,10 +15,12 @@ function init() {
 	const BLOCK = "block";
 	const PACMAN_X = "x";
 	const PACMAN_Y = "y";
-	const NUMBER_GHOSTS = 3;
+	const NUMBER_GHOSTS = 8;
 	const NUMBER_CHERRY = 5;
 	const INTERVAL = 100;
 	const TIME_POWER = INTERVAL * 50;
+	const COLOR_GHOST = ["#993333", "#339933", "#333399", "#999933", "#993399", "#339999"];
+	const COLOR_GHOST_WEAK = "#A9A9A9";
 
 	var ctx = canvas.getContext("2d");
 	var w = window.innerWidth;
@@ -77,8 +79,9 @@ function init() {
 			let x = Math.floor(Math.random() * GHOST_AREA.w) + GHOST_AREA.x;
 			let y = Math.floor(Math.random() * GHOST_AREA.h) + GHOST_AREA.y;
 			let direction = randomProperty(DIRECTION);
-			console.log("x: " + x + " y: " + y + " direction: " + direction);
-			ghosts.push({ x: x, y: y, direction: direction });
+			let color = randomProperty(COLOR_GHOST);
+			//console.log("x: " + x + " y: " + y + " direction: " + direction);
+			ghosts.push({ x: x, y: y, color: color, direction: direction });
 		}
 	}
 	function generateCherry() {
@@ -95,7 +98,10 @@ function init() {
 		function drawCherries() {
 			ctx.fillStyle = COLOR_CHERRY;
 			cherries.forEach(cherry => {
-				ctx.fillRect(cherry.x * SIZE_BLOCK, cherry.y * SIZE_BLOCK, SIZE_BLOCK, SIZE_BLOCK);
+				ctx.beginPath();
+				ctx.arc(cherry.x * SIZE_BLOCK + SIZE_BLOCK / 2, cherry.y * SIZE_BLOCK + SIZE_BLOCK / 2, SIZE_BLOCK / 2, 0, 2 * Math.PI, false);
+				ctx.fill();
+				//ctx.fillRect(cherry.x * SIZE_BLOCK, cherry.y * SIZE_BLOCK, SIZE_BLOCK, SIZE_BLOCK);
 			});
 		}
 	}
@@ -109,8 +115,8 @@ function init() {
 		})
 	}
 	function drawGhost(value) {
-		ctx.fillStyle = COLOR_GHOST;
-		//console.log(value);
+		let color = pacman.power < 0 ? value.color : COLOR_GHOST_WEAK;
+		ctx.fillStyle = color;
 		ctx.fillRect(value.x * SIZE_BLOCK, value.y * SIZE_BLOCK, SIZE_BLOCK, SIZE_BLOCK);
 	}
 	function controlGhosts() {
@@ -143,16 +149,6 @@ function init() {
 		controlScore();
 		drawScore();
 		function controlScore() {
-			//pacman eats food
-			food.forEach((value, i) => {
-				let x = Math.round(pacman.x);
-				let y = Math.round(pacman.y);
-				if (x == value.x && y == value.y) {
-					score++;
-					food.splice(i, 1);
-				}
-			});
-
 			//pacman crashes ghost
 			ghosts.forEach((value, index) => {
 				if (Math.ceil(value.x) == Math.ceil(pacman.x) && Math.ceil(value.y) == Math.ceil(pacman.y) || Math.floor(value.x) == Math.floor(pacman.x) && Math.floor(value.y) == Math.floor(pacman.y)) {
@@ -167,9 +163,19 @@ function init() {
 				}
 			});
 
+			let x = Math.round(pacman.x);
+			let y = Math.round(pacman.y);
+			//pacman eats food
+			food.forEach((value, i) => {
+				if (x == value.x && y == value.y) {
+					score++;
+					food.splice(i, 1);
+				}
+			});
+
 			//pacman eats cherry
 			cherries.forEach((cherry, index) => {
-				if (cherry.x == pacman.x && cherry.y == pacman.y) {
+				if (cherry.x == x && cherry.y == y) {
 					pacman.power = TIME_POWER;
 					cherries.splice(index, 1);
 					score += 5;
@@ -263,7 +269,7 @@ function init() {
 	}
 	function drawPacman() {
 		let color = pacman.power < 0 ? COLOR_PACMAN : COLOR_POWER;
-		let margin = pacman.power < 0 ? MARGIN_PACMAN : -MARGIN_PACMAN;
+		let margin = pacman.power < 0 ? MARGIN_PACMAN : 0;
 		let angle = isOpen ? getAngle() : { startMouth: 0, endMouth: Math.PI, startHead: Math.PI, endHead: 0 };
 		let eye = getEye();
 
