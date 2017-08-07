@@ -6,7 +6,6 @@ function init() {
 	const w = canvas.width;
 	const MARGIN_PACMAN = 1;
 	const STEP = 5;
-	const GRID_SIZE = 19;
 	const COLOR = {
 		BACKGROUND: "#000000",
 		PACMAN: "#990000",
@@ -19,17 +18,20 @@ function init() {
 		GHOST_WEAK: "#A9A9A9",
 		GHOST: ["#993333", "#339933", "#333399", "#999933", "#993399", "#339999"]
 	};
+	const SIZE = {
+		GRID: 19,
+		BLOCK: w / 19
+	};
 	const NUMBER = {
 		GHOST: 8,
 		CHERRY: 5,
-		ROW: GRID_SIZE * STEP,
+		ROW: SIZE.GRID * STEP,
 		POWER: 50,
 		INTERVAL: 100
 	}
 	const ELEMENT = { FOOD: "food", BLOCK: "block", CHERRY: "cherry" };
 	const GHOST_AREA = { x: 7, y: 8, w: 5, h: 3 };
 	const DIRECTION = { LEFT: "left", RIGHT: "right", UP: "up", DOWN: "down" };
-	const SIZE_BLOCK = w / GRID_SIZE;
 	var pacman = {};
 	var map = [];
 	var food = [];
@@ -117,26 +119,26 @@ function init() {
 		const pow = pacman.power / 100;
 		let color = pow < 0 || pow == 1 || pow == 5 || pow == 9 || pow == 13 ? value.color : COLOR.GHOST_WEAK;
 		ctx.fillStyle = color;
-		//ctx.fillRect(value.x * SIZE_BLOCK, value.y * SIZE_BLOCK, SIZE_BLOCK, SIZE_BLOCK);
-		let x = value.x * SIZE_BLOCK + SIZE_BLOCK / 2;
-		let y = value.y * SIZE_BLOCK + SIZE_BLOCK / 2;
-		ctx.fillRect(x - SIZE_BLOCK / 2, y, SIZE_BLOCK, SIZE_BLOCK / 4);
+		//ctx.fillRect(value.x * SIZE.BLOCK, value.y * SIZE.BLOCK, SIZE.BLOCK, SIZE.BLOCK);
+		let x = value.x * SIZE.BLOCK + SIZE.BLOCK / 2;
+		let y = value.y * SIZE.BLOCK + SIZE.BLOCK / 2;
+		ctx.fillRect(x - SIZE.BLOCK / 2, y, SIZE.BLOCK, SIZE.BLOCK / 4);
 		ctx.beginPath();
-		ctx.arc(x, y, SIZE_BLOCK / 2, Math.PI, 0, false);
+		ctx.arc(x, y, SIZE.BLOCK / 2, Math.PI, 0, false);
 		for (let i = -3; i <= 3; i += 2) {
-			ctx.arc(x + SIZE_BLOCK * i / 8, y + SIZE_BLOCK / 4, SIZE_BLOCK / 8, 0, Math.PI, false);
+			ctx.arc(x + SIZE.BLOCK * i / 8, y + SIZE.BLOCK / 4, SIZE.BLOCK / 8, 0, Math.PI, false);
 		}
 		ctx.fill();
 		ctx.fillStyle = COLOR.EYE;
 		ctx.beginPath();
-		ctx.arc(x - SIZE_BLOCK / 4, y, SIZE_BLOCK / 8, 0, 2 * Math.PI, false);
-		ctx.arc(x + SIZE_BLOCK / 4, y, SIZE_BLOCK / 8, 0, 2 * Math.PI, false);
+		ctx.arc(x - SIZE.BLOCK / 4, y, SIZE.BLOCK / 8, 0, 2 * Math.PI, false);
+		ctx.arc(x + SIZE.BLOCK / 4, y, SIZE.BLOCK / 8, 0, 2 * Math.PI, false);
 		ctx.fill();
 	}
 
 	function generateFood() {
-		for (let i = 0; i < GRID_SIZE; i++) {
-			for (let j = 0; j < GRID_SIZE; j++) {
+		for (let i = 0; i < SIZE.GRID; i++) {
+			for (let j = 0; j < SIZE.GRID; j++) {
 				let foo = { x: i, y: j };
 				if (!isContained(map, foo)) {
 					food.push(foo);
@@ -148,8 +150,9 @@ function init() {
 	function drawScore() {
 		ctx.fillStyle = COLOR.FOOD;
 		ctx.font = "20px Monaco";
-		ctx.fillText("Score: " + score, 0, SIZE_BLOCK);
+		ctx.fillText("Score: " + score, 0, SIZE.BLOCK);
 	}
+
 	function controlGame() {
 		//control pacman
 		controlObject(pacman, false);
@@ -174,7 +177,7 @@ function init() {
 				}
 			});
 
-			if (food.length == 0) {
+			if (food.length == 0 || ghosts.length == 0) {
 				reset();
 			}
 
@@ -281,9 +284,9 @@ function init() {
 		let angle = getAngle();
 		let eye = getEye();
 		let pac = {};
-		pac.x = pacman.x * SIZE_BLOCK + SIZE_BLOCK / 2 + margin;
-		pac.y = pacman.y * SIZE_BLOCK + SIZE_BLOCK / 2 + margin;
-		pac.radius = SIZE_BLOCK / 2 - margin * 2;
+		pac.x = pacman.x * SIZE.BLOCK + SIZE.BLOCK / 2 + margin;
+		pac.y = pacman.y * SIZE.BLOCK + SIZE.BLOCK / 2 + margin;
+		pac.radius = SIZE.BLOCK / 2 - margin * 2;
 
 		ctx.beginPath();
 		ctx.arc(pac.x, pac.y, pac.radius, angle.startMouth, angle.endMouth, false);
@@ -293,26 +296,26 @@ function init() {
 		ctx.arc(pac.x, pac.y, pac.radius, angle.startHead, angle.endHead, false);
 		ctx.fill();
 		ctx.beginPath();
-		ctx.arc(eye.x, eye.y, SIZE_BLOCK / 10, 0, 2 * Math.PI, false);
+		ctx.arc(eye.x, eye.y, SIZE.BLOCK / 10, 0, 2 * Math.PI, false);
 		ctx.fillStyle = COLOR.FOOD;
 		ctx.fill();
 
 		function getEye() {
 			let eye = {};
-			const base = { x: pacman.x * SIZE_BLOCK, y: pacman.y * SIZE_BLOCK };
+			const base = { x: pacman.x * SIZE.BLOCK, y: pacman.y * SIZE.BLOCK };
 			switch (pacman.direction) {
 				case DIRECTION.RIGHT:
 				case DIRECTION.LEFT:
-					eye.x = base.x + SIZE_BLOCK / 2;
-					eye.y = base.y + SIZE_BLOCK / 4;
+					eye.x = base.x + SIZE.BLOCK / 2;
+					eye.y = base.y + SIZE.BLOCK / 4;
 					break;
 				case DIRECTION.UP:
-					eye.x = base.x + SIZE_BLOCK / 4;
-					eye.y = base.y + SIZE_BLOCK / 2;
+					eye.x = base.x + SIZE.BLOCK / 4;
+					eye.y = base.y + SIZE.BLOCK / 2;
 					break;
 				case DIRECTION.DOWN:
-					eye.x = base.x + SIZE_BLOCK * 3 / 4;
-					eye.y = base.y + SIZE_BLOCK / 2;
+					eye.x = base.x + SIZE.BLOCK * 3 / 4;
+					eye.y = base.y + SIZE.BLOCK / 2;
 					break;
 			}
 			return eye;
@@ -352,10 +355,10 @@ function init() {
 	}
 
 	function generateMap() {
-		for (let i = 0; i < GRID_SIZE / 2; i++) {
+		for (let i = 0; i < SIZE.GRID / 2; i++) {
 			generateOthers(i, 0);
 		}
-		for (let i = 1; i < GRID_SIZE / 2; i++) {
+		for (let i = 1; i < SIZE.GRID / 2; i++) {
 			generateOthers(0, i);
 		}
 		for (let i = 2; i < 2 + 5; i++) {
@@ -377,15 +380,15 @@ function init() {
 		generateOthers(6, 7);
 		generateOthers(6, 8);
 		pushIntoMap({ x: 6, y: 9 });
-		pushIntoMap({ x: GRID_SIZE - 6 - 1, y: 9 });
+		pushIntoMap({ x: SIZE.GRID - 6 - 1, y: 9 });
 		for (let i = 8; i < 8 + 3; i++) {
 			pushIntoMap({ x: i, y: 11 });
 		}
 		function generateOthers(x, y) {
 			pushIntoMap({ x: x, y: y });
-			pushIntoMap({ x: GRID_SIZE - x - 1, y: y });
-			pushIntoMap({ x: x, y: GRID_SIZE - y - 1 });
-			pushIntoMap({ x: GRID_SIZE - x - 1, y: GRID_SIZE - y - 1 });
+			pushIntoMap({ x: SIZE.GRID - x - 1, y: y });
+			pushIntoMap({ x: x, y: SIZE.GRID - y - 1 });
+			pushIntoMap({ x: SIZE.GRID - x - 1, y: SIZE.GRID - y - 1 });
 		}
 		function pushIntoMap(value) {
 			map.push({ x: value.x, y: value.y });
@@ -409,28 +412,28 @@ function init() {
 		});
 	}
 	function drawElement(ele, obj) {
-		let x = obj.x * SIZE_BLOCK;
-		let y = obj.y * SIZE_BLOCK;
+		let x = obj.x * SIZE.BLOCK;
+		let y = obj.y * SIZE.BLOCK;
 		switch (ele) {
 			case ELEMENT.BLOCK:
 				ctx.fillStyle = COLOR.MAP;
-				ctx.fillRect(x, y, SIZE_BLOCK, SIZE_BLOCK);
+				ctx.fillRect(x, y, SIZE.BLOCK, SIZE.BLOCK);
 				break;
 			case ELEMENT.FOOD:
 				ctx.fillStyle = COLOR.FOOD;
-				ctx.fillRect(x + SIZE_BLOCK / 3, y + SIZE_BLOCK / 3, SIZE_BLOCK / 3, SIZE_BLOCK / 3);
+				ctx.fillRect(x + SIZE.BLOCK / 3, y + SIZE.BLOCK / 3, SIZE.BLOCK / 3, SIZE.BLOCK / 3);
 				break;
 			case ELEMENT.CHERRY:
 				ctx.fillStyle = COLOR.CHERRY;
 				ctx.beginPath();
-				ctx.arc(x + SIZE_BLOCK / 4, y + SIZE_BLOCK / 2, SIZE_BLOCK / 4, 0, 2 * Math.PI, false);
-				ctx.arc(x + SIZE_BLOCK * 3 / 4, y + SIZE_BLOCK * 3 / 4, SIZE_BLOCK / 4, 0, 2 * Math.PI, false);
+				ctx.arc(x + SIZE.BLOCK / 4, y + SIZE.BLOCK / 2, SIZE.BLOCK / 4, 0, 2 * Math.PI, false);
+				ctx.arc(x + SIZE.BLOCK * 3 / 4, y + SIZE.BLOCK * 3 / 4, SIZE.BLOCK / 4, 0, 2 * Math.PI, false);
 				ctx.fill();
 				ctx.beginPath();
-				ctx.moveTo(x + SIZE_BLOCK / 4, y + SIZE_BLOCK / 4);
-				ctx.lineTo(x + SIZE_BLOCK, y);
-				ctx.moveTo(x + SIZE_BLOCK * 3 / 4, y);
-				ctx.lineTo(x + SIZE_BLOCK * 3 / 4, y + SIZE_BLOCK / 2);
+				ctx.moveTo(x + SIZE.BLOCK / 4, y + SIZE.BLOCK / 4);
+				ctx.lineTo(x + SIZE.BLOCK, y);
+				ctx.moveTo(x + SIZE.BLOCK * 3 / 4, y);
+				ctx.lineTo(x + SIZE.BLOCK * 3 / 4, y + SIZE.BLOCK / 2);
 				ctx.lineWidth = 3;
 				ctx.strokeStyle = COLOR.CHERRY_BRANCH;
 				ctx.stroke();
