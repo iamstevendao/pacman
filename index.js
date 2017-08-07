@@ -1,32 +1,34 @@
 function init() {
-	var canvas = document.getElementById('root');
-	const COLOR_BACKGROUND = "#000000";
-	const COLOR_PACMAN = "#990000";
-	const COLOR_POWER = "#ff0000"
-	const COLOR_MAP = "#000099";
-	const COLOR_FOOD = "#999999";
-	const COLOR_CHERRY = COLOR_PACMAN;
-	const COLOR_CHERRY_LINE = "#009900";
-	const COLOR_EYE = "#ffffff";
+	const canvas = document.getElementById('root');
+	const ctx = canvas.getContext("2d");
+	canvas.width = window.innerWidth > innerHeight ? innerHeight : innerWidth;
+	canvas.height = canvas.width;
+	const w = canvas.width;
 	const MARGIN_PACMAN = 1;
 	const STEP = 5;
 	const GRID_SIZE = 19;
-	const ROW_NUMBER = GRID_SIZE * STEP;
+	const COLOR = {
+		BACKGROUND: "#000000",
+		PACMAN: "#990000",
+		POWER: "#ff0000",
+		MAP: "#000099",
+		FOOD: "#999999",
+		CHERRY: "#990000",
+		CHERRY_BRANCH: "#009900",
+		EYE: "#ffffff",
+		GHOST_WEAK: "#A9A9A9",
+		GHOST: ["#993333", "#339933", "#333399", "#999933", "#993399", "#339999"]
+	};
+	const NUMBER = {
+		GHOST: 8,
+		CHERRY: 5,
+		ROW: GRID_SIZE * STEP,
+		POWER: 50,
+		INTERVAL: 100
+	}
 	const ELEMENT = { FOOD: "food", BLOCK: "block", CHERRY: "cherry" };
-	const NUMBER_GHOSTS = 8;
-	const NUMBER_CHERRY = 5;
-	const INTERVAL = 100;
-	const TIME_POWER = INTERVAL * 50;
-	const COLOR_GHOST = ["#993333", "#339933", "#333399", "#999933", "#993399", "#339999"];
-	const COLOR_GHOST_WEAK = "#A9A9A9";
-
-	var ctx = canvas.getContext("2d");
-	var w = window.innerWidth;
-	var h = window.innerHeight;
-	canvas.width = w > h ? h : w;
-	canvas.height = canvas.width;
-	w = canvas.width;
-	var cw = w / ROW_NUMBER;
+	const GHOST_AREA = { x: 7, y: 8, w: 5, h: 3 };
+	const DIRECTION = { LEFT: "left", RIGHT: "right", UP: "up", DOWN: "down" };
 	const SIZE_BLOCK = w / GRID_SIZE;
 	var pacman = {};
 	var map = [];
@@ -34,14 +36,15 @@ function init() {
 	var ghosts = [];
 	var cherries = [];
 	var isOpen = false;
-	const GHOST_AREA = { x: 7, y: 8, w: 5, h: 3 };
-	const DIRECTION = { l: "left", r: "right", u: "up", d: "down" };
 	var score = 0;
 
 	reset();
-	setInterval(draw, INTERVAL);
+	setInterval(update, NUMBER.INTERVAL);
 
-	//draw
+	function update() {
+		draw();
+		controlGame();
+	}
 	function draw() {
 		drawBackground();
 		drawMap();
@@ -50,10 +53,7 @@ function init() {
 		drawPacman();
 		drawGhosts();
 		drawScore();
-
-		controlGame();
 	}
-
 	function reset() {
 		toDefault();
 		generateElements();
@@ -85,16 +85,16 @@ function init() {
 	}
 
 	function generateGhosts() {
-		for (let i = 0; i < NUMBER_GHOSTS; i++) {
+		for (let i = 0; i < NUMBER.GHOST; i++) {
 			let x = Math.floor(Math.random() * GHOST_AREA.w) + GHOST_AREA.x;
 			let y = Math.floor(Math.random() * GHOST_AREA.h) + GHOST_AREA.y;
 			let direction = randomProperty(DIRECTION);
-			let color = randomProperty(COLOR_GHOST);
+			let color = randomProperty(COLOR.GHOST);
 			ghosts.push({ x: x, y: y, color: color, direction: direction });
 		}
 	}
 	function generateCherry() {
-		while (cherries.length < NUMBER_CHERRY) {
+		while (cherries.length < NUMBER.CHERRY) {
 			let index = Math.floor(Math.random() * food.length);
 			let cher = food[index];
 			if (!isContained(cherries, cher)) {
@@ -115,7 +115,7 @@ function init() {
 	}
 	function drawGhost(value) {
 		const pow = pacman.power / 100;
-		let color = pow < 0 || pow == 1 || pow == 3 || pow == 5 || pow == 7 ? value.color : COLOR_GHOST_WEAK;
+		let color = pow < 0 || pow == 1 || pow == 5 || pow == 9 || pow == 13 ? value.color : COLOR.GHOST_WEAK;
 		ctx.fillStyle = color;
 		//ctx.fillRect(value.x * SIZE_BLOCK, value.y * SIZE_BLOCK, SIZE_BLOCK, SIZE_BLOCK);
 		let x = value.x * SIZE_BLOCK + SIZE_BLOCK / 2;
@@ -127,7 +127,7 @@ function init() {
 			ctx.arc(x + SIZE_BLOCK * i / 8, y + SIZE_BLOCK / 4, SIZE_BLOCK / 8, 0, Math.PI, false);
 		}
 		ctx.fill();
-		ctx.fillStyle = COLOR_EYE;
+		ctx.fillStyle = COLOR.EYE;
 		ctx.beginPath();
 		ctx.arc(x - SIZE_BLOCK / 4, y, SIZE_BLOCK / 8, 0, 2 * Math.PI, false);
 		ctx.arc(x + SIZE_BLOCK / 4, y, SIZE_BLOCK / 8, 0, 2 * Math.PI, false);
@@ -146,9 +146,9 @@ function init() {
 	}
 
 	function drawScore() {
-		ctx.fillStyle = COLOR_FOOD;
+		ctx.fillStyle = COLOR.FOOD;
 		ctx.font = "20px Monaco";
-		ctx.fillText("Score: " + score, 0, cw * 3);
+		ctx.fillText("Score: " + score, 0, SIZE_BLOCK);
 	}
 	function controlGame() {
 		//control pacman
@@ -191,7 +191,7 @@ function init() {
 			//pacman eats cherry
 			cherries.forEach((cherry, index) => {
 				if (cherry.x == x && cherry.y == y) {
-					pacman.power = TIME_POWER;
+					pacman.power = NUMBER.INTERVAL * NUMBER.POWER;
 					cherries.splice(index, 1);
 					score += 5;
 				}
@@ -213,19 +213,19 @@ function init() {
 				obj.direction = possibleDirection[Math.floor(Math.random() * possibleDirection.length)];
 			}
 			if (!isGhost) {
-				obj.power -= INTERVAL;
+				obj.power -= NUMBER.INTERVAL;
 				isOpen = !isOpen;
 			}
 			function opositeOf(x) {
 				switch (x) {
-					case DIRECTION.l:
-						return DIRECTION.r;
-					case DIRECTION.r:
-						return DIRECTION.l;
-					case DIRECTION.u:
-						return DIRECTION.d;
-					case DIRECTION.d:
-						return DIRECTION.u;
+					case DIRECTION.LEFT:
+						return DIRECTION.RIGHT;
+					case DIRECTION.RIGHT:
+						return DIRECTION.LEFT;
+					case DIRECTION.UP:
+						return DIRECTION.DOWN;
+					case DIRECTION.DOWN:
+						return DIRECTION.UP;
 				}
 			}
 			function isPossible(x) {
@@ -233,26 +233,26 @@ function init() {
 			}
 
 			switch (obj.direction) {
-				case DIRECTION.r:
-					if (isPossible(DIRECTION.r)) {
+				case DIRECTION.RIGHT:
+					if (isPossible(DIRECTION.RIGHT)) {
 						obj.x += 1 / 4;
 						obj.y = Math.round(obj.y);
 					}
 					break;
-				case DIRECTION.l:
-					if (isPossible(DIRECTION.l)) {
+				case DIRECTION.LEFT:
+					if (isPossible(DIRECTION.LEFT)) {
 						obj.x -= 1 / 4;
 						obj.y = Math.round(obj.y);
 					}
 					break;
-				case DIRECTION.u:
-					if (isPossible(DIRECTION.u)) {
+				case DIRECTION.UP:
+					if (isPossible(DIRECTION.UP)) {
 						obj.y -= 1 / 4;
 						obj.x = Math.round(obj.x);
 					}
 					break;
-				case DIRECTION.d:
-					if (isPossible(DIRECTION.d)) {
+				case DIRECTION.DOWN:
+					if (isPossible(DIRECTION.DOWN)) {
 						obj.y += 1 / 4;
 						obj.x = Math.round(obj.x);
 					}
@@ -261,13 +261,13 @@ function init() {
 			function whereCantGo() {
 				let direction = [];
 				if (isCrashed(obj.x + 1, obj.y))
-					direction.push(DIRECTION.r);
+					direction.push(DIRECTION.RIGHT);
 				if (isCrashed(obj.x - 1, obj.y))
-					direction.push(DIRECTION.l);
+					direction.push(DIRECTION.LEFT);
 				if (isCrashed(obj.x, obj.y - 1))
-					direction.push(DIRECTION.u);
+					direction.push(DIRECTION.UP);
 				if (isCrashed(obj.x, obj.y + 1))
-					direction.push(DIRECTION.d);
+					direction.push(DIRECTION.DOWN);
 				return direction;
 			}
 			function isCrashed(x, y) {
@@ -276,7 +276,7 @@ function init() {
 		}
 	}
 	function drawPacman() {
-		let color = pacman.power < 0 ? COLOR_PACMAN : COLOR_POWER;
+		let color = pacman.power < 0 ? COLOR.PACMAN : COLOR.POWER;
 		let margin = pacman.power < 0 ? MARGIN_PACMAN : 0;
 		let angle = getAngle();
 		let eye = getEye();
@@ -294,23 +294,23 @@ function init() {
 		ctx.fill();
 		ctx.beginPath();
 		ctx.arc(eye.x, eye.y, SIZE_BLOCK / 10, 0, 2 * Math.PI, false);
-		ctx.fillStyle = COLOR_FOOD;
+		ctx.fillStyle = COLOR.FOOD;
 		ctx.fill();
 
 		function getEye() {
 			let eye = {};
 			const base = { x: pacman.x * SIZE_BLOCK, y: pacman.y * SIZE_BLOCK };
 			switch (pacman.direction) {
-				case DIRECTION.r:
-				case DIRECTION.l:
+				case DIRECTION.RIGHT:
+				case DIRECTION.LEFT:
 					eye.x = base.x + SIZE_BLOCK / 2;
 					eye.y = base.y + SIZE_BLOCK / 4;
 					break;
-				case DIRECTION.u:
+				case DIRECTION.UP:
 					eye.x = base.x + SIZE_BLOCK / 4;
 					eye.y = base.y + SIZE_BLOCK / 2;
 					break;
-				case DIRECTION.d:
+				case DIRECTION.DOWN:
 					eye.x = base.x + SIZE_BLOCK * 3 / 4;
 					eye.y = base.y + SIZE_BLOCK / 2;
 					break;
@@ -326,19 +326,19 @@ function init() {
 			}
 			let mouth = 0, head = 0;
 			switch (pacman.direction) {
-				case DIRECTION.r:
+				case DIRECTION.RIGHT:
 					mouth = 0.25;
 					head = 0.75
 					break;
-				case DIRECTION.l:
+				case DIRECTION.LEFT:
 					mouth = 1.75;
 					head = 1.25
 					break;
-				case DIRECTION.u:
+				case DIRECTION.UP:
 					mouth = 0.25;
 					head = 1.75;
 					break;
-				case DIRECTION.d:
+				case DIRECTION.DOWN:
 					mouth = 0.75;
 					head = 1.25;
 					break;
@@ -399,8 +399,8 @@ function init() {
 	}
 
 	function drawBackground() {
-		ctx.fillStyle = COLOR_BACKGROUND;
-		ctx.fillRect(0, 0, w, h);
+		ctx.fillStyle = COLOR.BACKGROUND;
+		ctx.fillRect(0, 0, w, w);
 	}
 
 	function drawMap() {
@@ -413,15 +413,15 @@ function init() {
 		let y = obj.y * SIZE_BLOCK;
 		switch (ele) {
 			case ELEMENT.BLOCK:
-				ctx.fillStyle = COLOR_MAP;
+				ctx.fillStyle = COLOR.MAP;
 				ctx.fillRect(x, y, SIZE_BLOCK, SIZE_BLOCK);
 				break;
 			case ELEMENT.FOOD:
-				ctx.fillStyle = COLOR_FOOD;
+				ctx.fillStyle = COLOR.FOOD;
 				ctx.fillRect(x + SIZE_BLOCK / 3, y + SIZE_BLOCK / 3, SIZE_BLOCK / 3, SIZE_BLOCK / 3);
 				break;
 			case ELEMENT.CHERRY:
-				ctx.fillStyle = COLOR_CHERRY;
+				ctx.fillStyle = COLOR.CHERRY;
 				ctx.beginPath();
 				ctx.arc(x + SIZE_BLOCK / 4, y + SIZE_BLOCK / 2, SIZE_BLOCK / 4, 0, 2 * Math.PI, false);
 				ctx.arc(x + SIZE_BLOCK * 3 / 4, y + SIZE_BLOCK * 3 / 4, SIZE_BLOCK / 4, 0, 2 * Math.PI, false);
@@ -432,7 +432,7 @@ function init() {
 				ctx.moveTo(x + SIZE_BLOCK * 3 / 4, y);
 				ctx.lineTo(x + SIZE_BLOCK * 3 / 4, y + SIZE_BLOCK / 2);
 				ctx.lineWidth = 3;
-				ctx.strokeStyle = COLOR_CHERRY_LINE;
+				ctx.strokeStyle = COLOR.CHERRY_BRANCH;
 				ctx.stroke();
 				break;
 		}
@@ -441,19 +441,19 @@ function init() {
 	document.onkeydown = function (e) {
 		switch (e.keyCode) {
 			case 37:
-				pacman.direction = DIRECTION.l;
+				pacman.direction = DIRECTION.LEFT;
 				pacman.y = Math.round(pacman.y);
 				break;
 			case 38:
-				pacman.direction = DIRECTION.u;
+				pacman.direction = DIRECTION.UP;
 				pacman.x = Math.round(pacman.x);
 				break;
 			case 39:
-				pacman.direction = DIRECTION.r;
+				pacman.direction = DIRECTION.RIGHT;
 				pacman.y = Math.round(pacman.y);
 				break;
 			case 40:
-				pacman.direction = DIRECTION.d;
+				pacman.direction = DIRECTION.DOWN;
 				pacman.x = Math.round(pacman.x);
 				break;
 		}
