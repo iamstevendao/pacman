@@ -114,7 +114,8 @@ function init() {
 		});
 	}
 	function drawGhost(value) {
-		let color = pacman.power < 0 ? value.color : COLOR_GHOST_WEAK;
+		const pow = pacman.power / 100;
+		let color = pow < 0 || pow == 1 || pow == 3 || pow == 5 || pow == 7 ? value.color : COLOR_GHOST_WEAK;
 		ctx.fillStyle = color;
 		//ctx.fillRect(value.x * SIZE_BLOCK, value.y * SIZE_BLOCK, SIZE_BLOCK, SIZE_BLOCK);
 		let x = value.x * SIZE_BLOCK + SIZE_BLOCK / 2;
@@ -122,10 +123,9 @@ function init() {
 		ctx.fillRect(x - SIZE_BLOCK / 2, y, SIZE_BLOCK, SIZE_BLOCK / 4);
 		ctx.beginPath();
 		ctx.arc(x, y, SIZE_BLOCK / 2, Math.PI, 0, false);
-		ctx.arc(x - SIZE_BLOCK * 3 / 8, y + SIZE_BLOCK / 4, SIZE_BLOCK / 8, 0, Math.PI, false);
-		ctx.arc(x - SIZE_BLOCK * 1 / 8, y + SIZE_BLOCK / 4, SIZE_BLOCK / 8, 0, Math.PI, false);
-		ctx.arc(x + SIZE_BLOCK * 1 / 8, y + SIZE_BLOCK / 4, SIZE_BLOCK / 8, 0, Math.PI, false);
-		ctx.arc(x + SIZE_BLOCK * 3 / 8, y + SIZE_BLOCK / 4, SIZE_BLOCK / 8, 0, Math.PI, false);
+		for (let i = -3; i <= 3; i += 2) {
+			ctx.arc(x + SIZE_BLOCK * i / 8, y + SIZE_BLOCK / 4, SIZE_BLOCK / 8, 0, Math.PI, false);
+		}
 		ctx.fill();
 		ctx.fillStyle = COLOR_EYE;
 		ctx.beginPath();
