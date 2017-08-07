@@ -3,7 +3,6 @@ function init() {
 	const COLOR_BACKGROUND = "#000000";
 	const COLOR_PACMAN = "#990000";
 	const COLOR_POWER = "#ff0000"
-	//const COLOR_GHOST = "#993333";
 	const COLOR_MAP = "#000099";
 	const COLOR_FOOD = "#999999";
 	const COLOR_CHERRY = "#ffffff";
@@ -11,9 +10,6 @@ function init() {
 	const STEP = 5;
 	const GRID_SIZE = 19;
 	const ROW_NUMBER = GRID_SIZE * STEP;
-	const FOOD = "food";
-	const BLOCK = "block";
-	const CHERRY = "cherry";
 	const ELEMENT = { FOOD: "food", BLOCK: "block", CHERRY: "cherry" };
 	const NUMBER_GHOSTS = 8;
 	const NUMBER_CHERRY = 5;
@@ -58,8 +54,9 @@ function init() {
 
 	function reset() {
 		toDefault();
-		initialize();
+		generateElements();
 		function toDefault() {
+			score = 0;
 			map = [];
 			food = [];
 			ghosts = [];
@@ -67,7 +64,7 @@ function init() {
 			pacman = { x: 1, y: 1, direction: "right", power: 0 };
 		}
 	}
-	function initialize() {
+	function generateElements() {
 		generateMap();
 		generateFood();
 		generateCherry();
@@ -95,7 +92,7 @@ function init() {
 		}
 	}
 	function generateCherry() {
-		while (cherries.length < 5) {
+		while (cherries.length < NUMBER_CHERRY) {
 			let cher = food[Math.floor(Math.random() * food.length)];
 			if (!isContained(cherries, cher))
 				cherries.push(cher);
@@ -149,14 +146,17 @@ function init() {
 				if (Math.ceil(value.x) == Math.ceil(pacman.x) && Math.ceil(value.y) == Math.ceil(pacman.y) || Math.floor(value.x) == Math.floor(pacman.x) && Math.floor(value.y) == Math.floor(pacman.y)) {
 					if (pacman.power < 0) {
 						reset();
-						score = 0;
-						console.log("game over");
 					} else {
+						//pacman eats ghost
 						ghosts.splice(index, 1);
 						score += 10;
 					}
 				}
 			});
+
+			if (food.length == 0) {
+				reset();
+			}
 
 			let x = Math.round(pacman.x);
 			let y = Math.round(pacman.y);
@@ -358,7 +358,6 @@ function init() {
 		generateOthers(6, 8);
 		pushIntoMap({ x: 6, y: 9 });
 		pushIntoMap({ x: GRID_SIZE - 6 - 1, y: 9 });
-		//pushIntoMap({ x: 9, y: 7 });
 		for (let i = 8; i < 8 + 3; i++) {
 			pushIntoMap({ x: i, y: 11 });
 		}
