@@ -29,7 +29,7 @@ function init() {
 		POWER: 50,
 		INTERVAL: 100
 	}
-	const ELEMENT = { FOOD: "food", BLOCK: "block", CHERRY: "cherry" };
+	const ELEMENT = { FOOD: "food", BLOCK: "block", CHERRY: "cherry", GHOST: "ghost" };
 	const GHOST_AREA = { x: 7, y: 8, w: 5, h: 3 };
 	const DIRECTION = { LEFT: "left", RIGHT: "right", UP: "up", DOWN: "down" };
 	var pacman = {};
@@ -112,28 +112,9 @@ function init() {
 	}
 	function drawGhosts() {
 		ghosts.forEach(value => {
-			drawGhost(value);
+			//drawGhost(value);
+			drawElement(ELEMENT.GHOST, value);
 		});
-	}
-	function drawGhost(value) {
-		const pow = pacman.power / 100;
-		let color = pow < 0 || pow == 1 || pow == 5 || pow == 9 || pow == 13 ? value.color : COLOR.GHOST_WEAK;
-		ctx.fillStyle = color;
-		//ctx.fillRect(value.x * SIZE.BLOCK, value.y * SIZE.BLOCK, SIZE.BLOCK, SIZE.BLOCK);
-		let x = value.x * SIZE.BLOCK + SIZE.BLOCK / 2;
-		let y = value.y * SIZE.BLOCK + SIZE.BLOCK / 2;
-		ctx.fillRect(x - SIZE.BLOCK / 2, y, SIZE.BLOCK, SIZE.BLOCK / 4);
-		ctx.beginPath();
-		ctx.arc(x, y, SIZE.BLOCK / 2, Math.PI, 0, false);
-		for (let i = -3; i <= 3; i += 2) {
-			ctx.arc(x + SIZE.BLOCK * i / 8, y + SIZE.BLOCK / 4, SIZE.BLOCK / 8, 0, Math.PI, false);
-		}
-		ctx.fill();
-		ctx.fillStyle = COLOR.EYE;
-		ctx.beginPath();
-		ctx.arc(x - SIZE.BLOCK / 4, y, SIZE.BLOCK / 8, 0, 2 * Math.PI, false);
-		ctx.arc(x + SIZE.BLOCK / 4, y, SIZE.BLOCK / 8, 0, 2 * Math.PI, false);
-		ctx.fill();
 	}
 
 	function generateFood() {
@@ -437,6 +418,23 @@ function init() {
 				ctx.lineWidth = 3;
 				ctx.strokeStyle = COLOR.CHERRY_BRANCH;
 				ctx.stroke();
+				break;
+			case ELEMENT.GHOST:
+				const pow = pacman.power / 100;
+				let color = pow < 0 || pow == 1 || pow == 5 || pow == 9 || pow == 13 ? obj.color : COLOR.GHOST_WEAK;
+				ctx.fillStyle = color;
+				ctx.fillRect(x, y + SIZE.BLOCK / 2, SIZE.BLOCK, SIZE.BLOCK / 4);
+				ctx.beginPath();
+				ctx.arc(x + SIZE.BLOCK / 2, y + SIZE.BLOCK / 2, SIZE.BLOCK / 2, Math.PI, 0, false);
+				for (let i = -3; i <= 3; i += 2) {
+					ctx.arc(x + SIZE.BLOCK / 2 + SIZE.BLOCK * i / 8, y + SIZE.BLOCK / 2 + SIZE.BLOCK / 4, SIZE.BLOCK / 8, 0, Math.PI, false);
+				}
+				ctx.fill();
+				ctx.fillStyle = COLOR.EYE;
+				ctx.beginPath();
+				ctx.arc(x + SIZE.BLOCK / 4, y + SIZE.BLOCK / 2, SIZE.BLOCK / 8, 0, 2 * Math.PI, false);
+				ctx.arc(x + SIZE.BLOCK * 3 / 4, y + SIZE.BLOCK / 2, SIZE.BLOCK / 8, 0, 2 * Math.PI, false);
+				ctx.fill();
 				break;
 		}
 	}
