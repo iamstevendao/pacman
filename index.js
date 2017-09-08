@@ -58,7 +58,7 @@ function init() {
 		drawPacman();
 		drawGhosts();
 		drawScore();
-		gotoX();
+		drawPath();
 	}
 	function reset() {
 		toDefault();
@@ -96,7 +96,8 @@ function init() {
 			let y = Math.floor(Math.random() * GHOST_AREA.h) + GHOST_AREA.y;
 			let direction = randomProperty(DIRECTION);
 			let color = randomProperty(COLOR.GHOST);
-			ghosts.push({ x: x, y: y, color: color, direction: direction });
+			let path = [];
+			ghosts.push({ x: x, y: y, color: color, direction: direction, path: path });
 		}
 	}
 	function generateCherry() {
@@ -138,15 +139,31 @@ function init() {
 		ctx.fillText("Score: " + score, 0, SIZE.BLOCK);
 	}
 
+	function drawPath() {
+		ghosts.forEach((value) => {
+			value.path.forEach((path) => {
+				ctx.fillStyle = COLOR.PACMAN;
+				ctx.fillRect(path.x * SIZE.BLOCK + SIZE.BLOCK / 3, path.y * SIZE.BLOCK + SIZE.BLOCK / 3, SIZE.BLOCK / 3, SIZE.BLOCK / 3);
+			})
+		})
+	}
+
 	function controlGame() {
 		//control pacman
 		controlObject(pacman, false);
 		//control ghost
+		console.log("controlpath");
+		controlPath();
+		console.log("controlghosts");
 		ghosts.forEach(value => {
 			controlObject(value, true);
 		});
+		console.log("controlscore");
+
 		//control score
+
 		controlScore();
+		console.log("end...");
 
 		function controlScore() {
 			//pacman crashes ghost
@@ -186,6 +203,16 @@ function init() {
 			});
 		}
 
+		function followPath(ghost) {
+			if (ghost.path[0].x == ghost.x) {
+				ghost.direction = ghost.path[0].y > ghost.y ? DIRECTION.DOWN : DIRECTION.UP;
+				return;
+			} else {
+				ghost.direction = ghost.path[0].x > ghost.x ? DIRECTION.RIGHT : DIRECTION.LEFT;
+				return;
+			}
+		}
+
 		function controlObject(obj, isGhost) {
 			let possibleDirection = [];
 			let index = 0;
@@ -205,9 +232,13 @@ function init() {
 			//if the ghost is at the center of a block, random a new direction
 			//otherwise do nothing
 			if (isGhost && Number.isInteger(obj.x) && Number.isInteger(obj.y)) {
-				obj.direction = possibleDirection[Math.floor(Math.random() * possibleDirection.length)];
+				if (obj.path.length <= 0 || pacman.power > 0) {
+					obj.direction = possibleDirection[Math.floor(Math.random() * possibleDirection.length)];
+				}
+				else {
+					followPath(obj);
+				}
 			}
-
 			//pacman changes its mouth's state, and reduce power
 			if (!isGhost) {
 				obj.power -= NUMBER.INTERVAL;
@@ -277,19 +308,21 @@ function init() {
 	}
 
 	//object go to a specific point
-	function gotoX() {
+	function controlPath() {
 		//let point = randomADest();
 		let px = Math.round(pacman.x);
 		let py = Math.round(pacman.y);
-		let gx = Math.round(ghosts[0].x);
-		let gy = Math.round(ghosts[0].y);
-		nextMoves = findWay({ x: px, y: py, prev: null }, { x: gx, y: gy });
-		//console.log("next moves: ", nextMoves);
-		nextMoves.forEach((value) => {
-			ctx.fillStyle = COLOR.PACMAN;
-			ctx.fillRect(value.x * SIZE.BLOCK + SIZE.BLOCK / 3, value.y * SIZE.BLOCK + SIZE.BLOCK / 3, SIZE.BLOCK / 3, SIZE.BLOCK / 3);
+		ghosts.forEach((ghost) => {
+			let gx = Math.round(ghost.x);
+			let gy = Math.round(ghost.y);
+			//	console.log("pm: ", px, " ", py, " ghost: ", gx, " ", gy);
+
+			// if	they are at a same spot, BUM
+			if (gx != px || gy != py)
+				ghost.path = findWay({ x: gx, y: gy, prev: null }, { x: px, y: py });
 		});
 	}
+
 	function findWay(arrival, departure) {
 		let queue = [];
 		queue.push(arrival);
@@ -315,7 +348,7 @@ function init() {
 			curr = curr.prev;
 		} while (curr != null);
 
-		return nextMoves;
+		return nextMoves.reverse().splice(1);
 
 		function getAdjacences(point) {
 			if (typeof point !== "undefined") {
