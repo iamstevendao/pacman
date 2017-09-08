@@ -37,7 +37,6 @@ function init() {
 	var food = [];
 	var ghosts = [];
 	var cherries = [];
-	var nextMoves = [];
 	var isOpen = false;
 	var score = 0;
 
@@ -150,18 +149,15 @@ function init() {
 
 	function controlGame() {
 		//control pacman
-		controlObject(pacman, false);
+		controlObject(pacman);
 		//control ghost
-		console.log("controlpath");
 		controlPath();
-		console.log("controlghosts");
+
 		ghosts.forEach(value => {
-			controlObject(value, true);
+			controlObject(value);
 		});
-		console.log("controlscore");
 
 		//control score
-
 		controlScore();
 		console.log("end...");
 
@@ -178,7 +174,7 @@ function init() {
 					}
 				}
 			});
-
+			//game is over when there's no more food or ghosts
 			if (food.length == 0 || ghosts.length == 0) {
 				reset();
 			}
@@ -202,7 +198,21 @@ function init() {
 				}
 			});
 		}
+		//object go to a specific point
+		function controlPath() {
+			//let point = randomADest();
+			let px = Math.round(pacman.x);
+			let py = Math.round(pacman.y);
+			ghosts.forEach((ghost) => {
+				let gx = Math.round(ghost.x);
+				let gy = Math.round(ghost.y);
+				//	console.log("pm: ", px, " ", py, " ghost: ", gx, " ", gy);
 
+				// if	they are at a same spot, BUM
+				if (gx != px || gy != py)
+					ghost.path = findWay({ x: gx, y: gy, prev: null }, { x: px, y: py });
+			});
+		}
 		function followPath(ghost) {
 			if (ghost.path[0].x == ghost.x) {
 				ghost.direction = ghost.path[0].y > ghost.y ? DIRECTION.DOWN : DIRECTION.UP;
@@ -213,7 +223,7 @@ function init() {
 			}
 		}
 
-		function controlObject(obj, isGhost) {
+		function controlObject(obj) {
 			let possibleDirection = [];
 			let index = 0;
 
@@ -222,25 +232,30 @@ function init() {
 				if (whereCantGo().indexOf(DIRECTION[key]) == -1)
 					possibleDirection.push(DIRECTION[key]);
 			});
-
-			//if the object still go ahead, remove the oposite direction
-			if (isPossible(obj.direction)) {
-				if ((index = possibleDirection.indexOf(opositeOf(obj.direction))) != -1)
-					possibleDirection.splice(index, 1);
-			}
-
-			//if the ghost is at the center of a block, random a new direction
-			//otherwise do nothing
-			if (isGhost && Number.isInteger(obj.x) && Number.isInteger(obj.y)) {
-				if (obj.path.length <= 0 || pacman.power > 0) {
-					obj.direction = possibleDirection[Math.floor(Math.random() * possibleDirection.length)];
+			//if object is a ghost
+			if (obj.hasOwnProperty('path')) {
+				//when pacman activates power, go backwards
+				if (pacman.power >= NUMBER.INTERVAL * (NUMBER.POWER - 1)) {
+					obj.direction = opositeOf(obj.direction);
+					console.log("switch direction");
+				} else {
+					//if the object still go ahead, remove the oposite direction
+					if (isPossible(obj.direction)) {
+						if ((index = possibleDirection.indexOf(opositeOf(obj.direction))) != -1)
+							possibleDirection.splice(index, 1);
+					}
+					//if the ghost is at the center of a block, random a new direction
+					//otherwise do nothing
+					if (Number.isInteger(obj.x) && Number.isInteger(obj.y)) {
+						if (obj.path.length <= 0 || pacman.power > 0) {
+							obj.direction = possibleDirection[Math.floor(Math.random() * possibleDirection.length)];
+						}
+						else {
+							followPath(obj);
+						}
+					}
 				}
-				else {
-					followPath(obj);
-				}
-			}
-			//pacman changes its mouth's state, and reduce power
-			if (!isGhost) {
+			} else { //pacman changes its mouth's state, and reduce power
 				obj.power -= NUMBER.INTERVAL;
 				isOpen = !isOpen;
 			}
@@ -305,22 +320,6 @@ function init() {
 				return map.some(value => (value.x == x && value.y == y));
 			}
 		}
-	}
-
-	//object go to a specific point
-	function controlPath() {
-		//let point = randomADest();
-		let px = Math.round(pacman.x);
-		let py = Math.round(pacman.y);
-		ghosts.forEach((ghost) => {
-			let gx = Math.round(ghost.x);
-			let gy = Math.round(ghost.y);
-			//	console.log("pm: ", px, " ", py, " ghost: ", gx, " ", gy);
-
-			// if	they are at a same spot, BUM
-			if (gx != px || gy != py)
-				ghost.path = findWay({ x: gx, y: gy, prev: null }, { x: px, y: py });
-		});
 	}
 
 	function findWay(arrival, departure) {
