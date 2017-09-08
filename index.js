@@ -37,16 +37,19 @@ function init() {
 	var food = [];
 	var ghosts = [];
 	var cherries = [];
+	var nextMoves = [];
 	var isOpen = false;
 	var score = 0;
 
 	reset();
+	//update();
 	setInterval(update, NUMBER.INTERVAL);
 
 	function update() {
 		draw();
 		controlGame();
 	}
+
 	function draw() {
 		drawBackground();
 		drawMap();
@@ -55,6 +58,7 @@ function init() {
 		drawPacman();
 		drawGhosts();
 		drawScore();
+		gotoX();
 	}
 	function reset() {
 		toDefault();
@@ -185,21 +189,31 @@ function init() {
 		function controlObject(obj, isGhost) {
 			let possibleDirection = [];
 			let index = 0;
+
+			//get all the directions object can go
 			Object.keys(DIRECTION).forEach(key => {
 				if (whereCantGo().indexOf(DIRECTION[key]) == -1)
 					possibleDirection.push(DIRECTION[key]);
 			});
+
+			//if the object still go ahead, remove the oposite direction
 			if (isPossible(obj.direction)) {
 				if ((index = possibleDirection.indexOf(opositeOf(obj.direction))) != -1)
 					possibleDirection.splice(index, 1);
 			}
+
+			//if the ghost is at the center of a block, random a new direction
+			//otherwise do nothing
 			if (isGhost && Number.isInteger(obj.x) && Number.isInteger(obj.y)) {
 				obj.direction = possibleDirection[Math.floor(Math.random() * possibleDirection.length)];
 			}
+
+			//pacman changes its mouth's state, and reduce power
 			if (!isGhost) {
 				obj.power -= NUMBER.INTERVAL;
 				isOpen = !isOpen;
 			}
+
 			function opositeOf(x) {
 				switch (x) {
 					case DIRECTION.LEFT:
@@ -212,6 +226,7 @@ function init() {
 						return DIRECTION.UP;
 				}
 			}
+
 			function isPossible(x) {
 				return possibleDirection.indexOf(x) == -1 ? false : true;
 			}
@@ -242,6 +257,7 @@ function init() {
 					}
 					break;
 			}
+
 			function whereCantGo() {
 				let direction = [];
 				if (isCrashed(obj.x + 1, obj.y))
@@ -259,6 +275,70 @@ function init() {
 			}
 		}
 	}
+
+	//object go to a specific point
+	function gotoX() {
+		//let point = randomADest();
+		let px = Math.round(pacman.x);
+		let py = Math.round(pacman.y);
+		let gx = Math.round(ghosts[0].x);
+		let gy = Math.round(ghosts[0].y);
+		nextMoves = findWay({ x: px, y: py, prev: null }, { x: gx, y: gy });
+		//console.log("next moves: ", nextMoves);
+		nextMoves.forEach((value) => {
+			ctx.fillStyle = COLOR.PACMAN;
+			ctx.fillRect(value.x * SIZE.BLOCK + SIZE.BLOCK / 3, value.y * SIZE.BLOCK + SIZE.BLOCK / 3, SIZE.BLOCK / 3, SIZE.BLOCK / 3);
+		});
+	}
+	function findWay(arrival, departure) {
+		let queue = [];
+		queue.push(arrival);
+		let index = 0;
+		let result = null;
+		while (result == null) {
+			let adj = getAdjacences(queue[index]);
+			adj.forEach((value) => {
+				//console.log("adj: ", value.x, " ", value.y);
+				value.prev = JSON.parse(JSON.stringify(queue[index]));
+				queue.push(value);
+				if (value.x == departure.x && value.y == departure.y) {
+					result = value;
+				}
+			});
+			index++;
+		}
+		let nextMoves = [];
+		let curr = result;
+
+		do {
+			nextMoves.push({ x: curr.x, y: curr.y });
+			curr = curr.prev;
+		} while (curr != null);
+
+		return nextMoves;
+
+		function getAdjacences(point) {
+			if (typeof point !== "undefined") {
+				let adj = [{ x: point.x, y: point.y - 1 }, { x: point.x, y: point.y + 1 }, { x: point.x - 1, y: point.y }, { x: point.x + 1, y: point.y }];
+				return adj.filter((value) => {
+					return (value.x >= 1 && value.x < SIZE.GRID && value.y < SIZE.GRID && value.y >= 1 && !isContained(map, value) && !isContained(queue, value));
+				});
+			} else
+				return [];
+		}
+	}
+
+	//random a point which is not included in map
+	function randomADest() {
+		let point = {};
+		do {
+			let x = Math.floor(Math.random() * SIZE.GRID);
+			let y = Math.floor(Math.random() * SIZE.GRID);
+			point = { x: x, y: y };
+		} while (isContained(map, point));
+		return point;
+	}
+
 	function drawPacman() {
 		let color = pacman.power < 0 ? COLOR.PACMAN : COLOR.POWER;
 		let margin = pacman.power < 0 ? MARGIN_PACMAN : 0;
@@ -269,13 +349,18 @@ function init() {
 		pac.y = pacman.y * SIZE.BLOCK + SIZE.BLOCK / 2 + margin;
 		pac.radius = SIZE.BLOCK / 2 - margin * 2;
 
+		//half of a circle
 		ctx.beginPath();
 		ctx.arc(pac.x, pac.y, pac.radius, angle.startMouth, angle.endMouth, false);
 		ctx.fillStyle = color;
 		ctx.fill();
+
+		//half of a circle
 		ctx.beginPath();
 		ctx.arc(pac.x, pac.y, pac.radius, angle.startHead, angle.endHead, false);
 		ctx.fill();
+
+		//draw eye
 		ctx.beginPath();
 		ctx.arc(eye.x, eye.y, SIZE.BLOCK / 10, 0, 2 * Math.PI, false);
 		ctx.fillStyle = COLOR.FOOD;
@@ -301,6 +386,7 @@ function init() {
 			}
 			return eye;
 		}
+
 		function getAngle() {
 			let angle = { startMouth: Math.PI, endMouth: Math.PI, startHead: Math.PI, endHead: Math.PI };
 			if (!isOpen) {
@@ -400,10 +486,12 @@ function init() {
 				ctx.fillStyle = COLOR.MAP;
 				ctx.fillRect(x, y, SIZE.BLOCK, SIZE.BLOCK);
 				break;
+
 			case ELEMENT.FOOD:
 				ctx.fillStyle = COLOR.FOOD;
 				ctx.fillRect(x + SIZE.BLOCK / 3, y + SIZE.BLOCK / 3, SIZE.BLOCK / 3, SIZE.BLOCK / 3);
 				break;
+
 			case ELEMENT.CHERRY:
 				ctx.fillStyle = COLOR.CHERRY;
 				ctx.beginPath();
@@ -419,6 +507,7 @@ function init() {
 				ctx.strokeStyle = COLOR.CHERRY_BRANCH;
 				ctx.stroke();
 				break;
+
 			case ELEMENT.GHOST:
 				const pow = pacman.power / 100;
 				let color = pow < 0 || pow == 1 || pow == 5 || pow == 9 || pow == 13 ? obj.color : COLOR.GHOST_WEAK;
@@ -426,9 +515,12 @@ function init() {
 				ctx.fillRect(x, y + SIZE.BLOCK / 2, SIZE.BLOCK, SIZE.BLOCK / 4);
 				ctx.beginPath();
 				ctx.arc(x + SIZE.BLOCK / 2, y + SIZE.BLOCK / 2, SIZE.BLOCK / 2, Math.PI, 0, false);
+
+				//four circles as foot
 				for (let i = -3; i <= 3; i += 2) {
 					ctx.arc(x + SIZE.BLOCK / 2 + SIZE.BLOCK * i / 8, y + SIZE.BLOCK / 2 + SIZE.BLOCK / 4, SIZE.BLOCK / 8, 0, Math.PI, false);
 				}
+
 				ctx.fill();
 				ctx.fillStyle = COLOR.EYE;
 				ctx.beginPath();
