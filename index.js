@@ -139,12 +139,14 @@ function init() {
 	}
 
 	function drawPath() {
-		ghosts.forEach((value) => {
-			value.path.forEach((path) => {
-				ctx.fillStyle = COLOR.PACMAN;
-				ctx.fillRect(path.x * SIZE.BLOCK + SIZE.BLOCK / 3, path.y * SIZE.BLOCK + SIZE.BLOCK / 3, SIZE.BLOCK / 3, SIZE.BLOCK / 3);
+		if (pacman.power <= 0) {
+			ghosts.forEach((value) => {
+				value.path.forEach((path) => {
+					ctx.fillStyle = COLOR.PACMAN;
+					ctx.fillRect(path.x * SIZE.BLOCK + SIZE.BLOCK / 3, path.y * SIZE.BLOCK + SIZE.BLOCK / 3, SIZE.BLOCK / 3, SIZE.BLOCK / 3);
+				})
 			})
-		})
+		}
 	}
 
 	function controlGame() {
