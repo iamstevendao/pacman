@@ -148,7 +148,7 @@ function init() {
 		if (pacman.power <= 0) {
 			ghosts.forEach((value) => {
 				value.path.forEach((path) => {
-					ctx.fillStyle = COLOR.PACMAN;
+					ctx.fillStyle = value.color;
 					ctx.fillRect(path.x * SIZE.BLOCK + SIZE.BLOCK / 3, path.y * SIZE.BLOCK + SIZE.BLOCK / 3, SIZE.BLOCK / 3, SIZE.BLOCK / 3);
 				})
 			})
@@ -211,14 +211,13 @@ function init() {
 		//let point = randomADest();
 		let px = Math.round(pacman.x);
 		let py = Math.round(pacman.y);
-		ghosts.forEach((ghost) => {
+		ghosts.forEach((ghost, index) => {
 			let gx = Math.round(ghost.x);
 			let gy = Math.round(ghost.y);
-			//	console.log("pm: ", px, " ", py, " ghost: ", gx, " ", gy);
 
 			// if	they are at a same spot, BUM
 			if (gx != px || gy != py)
-				ghost.path = findWay({ x: gx, y: gy, prev: null }, { x: px, y: py });
+				ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: px, y: py });
 		});
 	}
 	function followPath(ghost) {
@@ -328,13 +327,13 @@ function init() {
 		return map.some(value => (value.x == x && value.y == y));
 	}
 
-	function findWay(arrival, departure) {
+	function findWay(ind, arrival, departure) {
 		let queue = [];
 		queue.push(arrival);
 		let index = 0;
 		let result = null;
 		while (result == null) {
-			let adj = getAdjacences(queue, queue[index]);
+			let adj = getAdjacences(ind, queue, queue[index]);
 			adj.forEach((value) => {
 				//console.log("adj: ", value.x, " ", value.y);
 				value.prev = JSON.parse(JSON.stringify(queue[index]));
@@ -355,14 +354,71 @@ function init() {
 
 		return nextMoves.reverse().splice(1);
 	}
-	function getAdjacences(queue, point) {
+	function getAdjacences(ind, queue, point) {
 		if (typeof point !== "undefined") {
-			let adj = [{ x: point.x, y: point.y - 1 }, { x: point.x, y: point.y + 1 }, { x: point.x - 1, y: point.y }, { x: point.x + 1, y: point.y }];
+			let adj = shuffle(ind, [{ x: point.x, y: point.y - 1 }, { x: point.x, y: point.y + 1 }, { x: point.x - 1, y: point.y }, { x: point.x + 1, y: point.y }]);
 			return adj.filter((value) => {
 				return (value.x >= 1 && value.x < SIZE.GRID && value.y < SIZE.GRID && value.y >= 1 && !isContained(map, value) && !isContained(queue, value));
 			});
 		} else
 			return [];
+	}
+
+	//shuffle the ghost's ways
+	function shuffle(ind, array) {
+		let arr = [];
+		let zero = 0, one = 1, two = 2, three = 3;
+		switch (ind) {
+			case 1:
+				zero = 1;
+				one = 2;
+				two = 3;
+				three = 0;
+				break;
+			case 2:
+				zero = 2;
+				one = 3;
+				two = 0;
+				three = 1;
+				break;
+			case 3:
+				zero = 3;
+				one = 0;
+				two = 1;
+				three = 2;
+				break;
+			case 4:
+				zero = 0;
+				one = 2;
+				two = 1;
+				three = 3;
+				break;
+			case 5:
+				zero = 2;
+				one = 0;
+				two = 3;
+				three = 1;
+				break;
+			case 6:
+				zero = 1;
+				one = 3;
+				two = 0;
+				three = 2;
+				break;
+			case 7:
+				zero = 3;
+				one = 1;
+				two = 2;
+				three = 0;
+				break;
+			default: break;
+		}
+		arr.push(array[zero]);
+		arr.push(array[one]);
+		arr.push(array[two]);
+		arr.push(array[three]);
+
+		return arr;
 	}
 	//random a point which is not included in map
 	function randomADest() {
@@ -487,17 +543,17 @@ function init() {
 		for (let i = 8; i < 8 + 3; i++) {
 			pushIntoMap({ x: i, y: 11 });
 		}
-		function generateOthers(x, y) {
-			pushIntoMap({ x: x, y: y });
-			pushIntoMap({ x: SIZE.GRID - x - 1, y: y });
-			pushIntoMap({ x: x, y: SIZE.GRID - y - 1 });
-			pushIntoMap({ x: SIZE.GRID - x - 1, y: SIZE.GRID - y - 1 });
-		}
-		function pushIntoMap(value) {
-			map.push({ x: value.x, y: value.y });
-		}
-	}
 
+	}
+	function generateOthers(x, y) {
+		pushIntoMap({ x: x, y: y });
+		pushIntoMap({ x: SIZE.GRID - x - 1, y: y });
+		pushIntoMap({ x: x, y: SIZE.GRID - y - 1 });
+		pushIntoMap({ x: SIZE.GRID - x - 1, y: SIZE.GRID - y - 1 });
+	}
+	function pushIntoMap(value) {
+		map.push({ x: value.x, y: value.y });
+	}
 	function drawFood() {
 		food.forEach(value => {
 			drawElement(ELEMENT.FOOD, value);
@@ -514,6 +570,7 @@ function init() {
 			drawElement(ELEMENT.BLOCK, value);
 		});
 	}
+
 	function drawElement(ele, obj) {
 		let x = obj.x * SIZE.BLOCK;
 		let y = obj.y * SIZE.BLOCK;
