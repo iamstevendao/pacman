@@ -40,10 +40,6 @@ function init() {
 	var isOpen = false;
 	var score = 0;
 
-	//destination of the third and forth ghost
-	var thirdGhost = null;
-	var forthGhost = null;
-
 	reset();
 	//update();
 	setInterval(update, NUMBER.INTERVAL);
@@ -224,7 +220,7 @@ function init() {
 	}
 	//object go to a specific point
 	function controlPath() {
-		//let point = randomADest();
+
 		ghosts.forEach((ghost, index) => {
 			let px = Math.round(pacman.x);
 			let py = Math.round(pacman.y);
@@ -403,17 +399,6 @@ function init() {
 			arr.push(array[(index + i) % 4]);
 		}
 		return arr;
-	}
-
-	//random a point which is not included in map
-	function randomADest() {
-		let point = {};
-		do {
-			let x = Math.floor(Math.random() * SIZE.GRID);
-			let y = Math.floor(Math.random() * SIZE.GRID);
-			point = { x: x, y: y };
-		} while (isContained(map, point));
-		return point;
 	}
 
 	function drawPacman() {
