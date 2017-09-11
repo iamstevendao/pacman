@@ -11,7 +11,7 @@ function init() {
 		PACMAN: "#990000",
 		POWER: "#ff0000",
 		MAP: "#000099",
-		FOOD: "#999999",
+		FOOD: "#ffffff",
 		CHERRY: "#990000",
 		CHERRY_BRANCH: "#009900",
 		EYE: "#ffffff",
@@ -40,6 +40,10 @@ function init() {
 	var isOpen = false;
 	var score = 0;
 
+	//destination of the third and forth ghost
+	var thirdGhost = null;
+	var forthGhost = null;
+
 	reset();
 	//update();
 	setInterval(update, NUMBER.INTERVAL);
@@ -52,12 +56,12 @@ function init() {
 	function draw() {
 		drawBackground();
 		drawMap();
+		drawPath();
 		drawFood();
 		drawCherries();
 		drawPacman();
 		drawGhosts();
 		drawScore();
-		drawPath();
 	}
 
 	function reset() {
@@ -149,7 +153,7 @@ function init() {
 			ghosts.forEach((value) => {
 				value.path.forEach((path) => {
 					ctx.fillStyle = value.color;
-					ctx.fillRect(path.x * SIZE.BLOCK + SIZE.BLOCK / 3, path.y * SIZE.BLOCK + SIZE.BLOCK / 3, SIZE.BLOCK / 3, SIZE.BLOCK / 3);
+					ctx.fillRect(path.x * SIZE.BLOCK + SIZE.BLOCK / 4, path.y * SIZE.BLOCK + SIZE.BLOCK / 4, SIZE.BLOCK / 2, SIZE.BLOCK / 2);
 				})
 			})
 		}
@@ -209,15 +213,34 @@ function init() {
 	//object go to a specific point
 	function controlPath() {
 		//let point = randomADest();
-		let px = Math.round(pacman.x);
-		let py = Math.round(pacman.y);
 		ghosts.forEach((ghost, index) => {
+			let px = Math.round(pacman.x);
+			let py = Math.round(pacman.y);
 			let gx = Math.round(ghost.x);
 			let gy = Math.round(ghost.y);
 
-			// if	they are at a same spot, BUM
-			if (gx != px || gy != py)
-				ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: px, y: py });
+			//ghost 2 and 3 will move along cherries
+			if (index == 2) {
+				if (thirdGhost == null || (ghost.x == thirdGhost.x && ghost.y == thirdGhost.y)) {
+					do {
+						thirdGhost = cherries[Math.floor(Math.random() * cherries.length)];
+					} while (thirdGhost.x == ghost.x && thirdGhost.y == ghost.y);
+				} else {
+					ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: thirdGhost.x, y: thirdGhost.y });
+				}
+			} else if (index == 3) {
+				if (forthGhost == null || (ghost.x == forthGhost.x && ghost.y == forthGhost.y)) {
+					do {
+						forthGhost = cherries[Math.floor(Math.random() * cherries.length)];
+					} while (forthGhost.x == ghost.x && forthGhost.y == ghost.y);
+				} else {
+					ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: forthGhost.x, y: forthGhost.y });
+				}
+			} else {
+				// if	they are at a same spot, BUM
+				if (gx != px || gy != py)
+					ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: px, y: py });
+			}
 		});
 	}
 	function followPath(ghost) {
@@ -328,6 +351,9 @@ function init() {
 	}
 
 	function findWay(ind, arrival, departure) {
+		//if arrival and departure have a same coordinates, return blank array
+		if (arrival.x == departure.x && arrival.y == departure.y)
+			return [];
 		let queue = [];
 		queue.push(arrival);
 		let index = 0;
@@ -354,6 +380,7 @@ function init() {
 
 		return nextMoves.reverse().splice(1);
 	}
+
 	function getAdjacences(ind, queue, point) {
 		if (typeof point !== "undefined") {
 			let adj = shuffle(ind, [{ x: point.x, y: point.y - 1 }, { x: point.x, y: point.y + 1 }, { x: point.x - 1, y: point.y }, { x: point.x + 1, y: point.y }]);
@@ -420,6 +447,7 @@ function init() {
 
 		return arr;
 	}
+
 	//random a point which is not included in map
 	function randomADest() {
 		let point = {};
