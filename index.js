@@ -104,7 +104,16 @@ function init() {
 			let color = randomProperty(COLOR.GHOST);
 			let path = [];
 			ghosts.push({ x: x, y: y, color: color, direction: direction, path: path });
+			generateTarget(ghosts[ghosts.length - 1]);
 		}
+	}
+
+	function generateTarget(obj) {
+		obj.path = [];
+		if (cherries.length > 0)
+			obj.target = Math.floor(Math.random() * NUMBER.GHOST) > NUMBER.GHOST / 4 ? -1 : Math.floor(Math.random() * cherries.length);
+		else
+			obj.target = -1;
 	}
 
 	function generateCherry() {
@@ -210,6 +219,9 @@ function init() {
 			}
 		});
 	}
+	function reachCherry(obj) {
+		return obj.x == cherries[obj.target].x && obj.y == cherries[obj.target].y;
+	}
 	//object go to a specific point
 	function controlPath() {
 		//let point = randomADest();
@@ -218,28 +230,15 @@ function init() {
 			let py = Math.round(pacman.y);
 			let gx = Math.round(ghost.x);
 			let gy = Math.round(ghost.y);
-
-			//ghost 2 and 3 will move along cherries
-			if (index == 2) {
-				if (thirdGhost == null || (ghost.x == thirdGhost.x && ghost.y == thirdGhost.y)) {
-					do {
-						thirdGhost = cherries[Math.floor(Math.random() * cherries.length)];
-					} while (thirdGhost.x == ghost.x && thirdGhost.y == ghost.y);
-				} else {
-					ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: thirdGhost.x, y: thirdGhost.y });
-				}
-			} else if (index == 3) {
-				if (forthGhost == null || (ghost.x == forthGhost.x && ghost.y == forthGhost.y)) {
-					do {
-						forthGhost = cherries[Math.floor(Math.random() * cherries.length)];
-					} while (forthGhost.x == ghost.x && forthGhost.y == ghost.y);
-				} else {
-					ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: forthGhost.x, y: forthGhost.y });
-				}
+			if (ghost.target == -1) {
+				ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: px, y: py });
 			} else {
-				// if	they are at a same spot, BUM
-				if (gx != px || gy != py)
-					ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: px, y: py });
+				//generate new target
+				if (ghost.path == null || ghost.target >= cherries.length || reachCherry(ghost)) {
+					ghost.target = Math.floor(Math.random() * cherries.length);
+				}
+				let cherry = cherries[ghost.target];
+				ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: cherry.x, y: cherry.y });
 			}
 		});
 	}
@@ -262,12 +261,18 @@ function init() {
 				possibleDirection.push(DIRECTION[key]);
 		});
 
-		//if object is a ghost
+		//if the object is a ghost
 		if (obj.hasOwnProperty('path')) {
+			//generate the target after an amount of time
+			if ((pacman.power % (NUMBER.INTERVAL * NUMBER.POWER * 2)) === 0) {
+				console.log("generated");
+				generateTarget(obj);
+			}
+
+			//control the direction
 			//when pacman activates power, go backwards
 			if (pacman.power >= NUMBER.INTERVAL * (NUMBER.POWER - 1)) {
 				obj.direction = opositeOf(obj.direction);
-				console.log("switch direction");
 			} else {
 				//if the object still go ahead, remove the oposite direction
 				if (isPossible(obj.direction)) {
@@ -351,7 +356,7 @@ function init() {
 	}
 
 	function findWay(ind, arrival, departure) {
-		//if arrival and departure have a same coordinates, return blank array
+		//if arrival and departure have a same coordinates, return a blank array
 		if (arrival.x == departure.x && arrival.y == departure.y)
 			return [];
 		let queue = [];
@@ -361,7 +366,6 @@ function init() {
 		while (result == null) {
 			let adj = getAdjacences(ind, queue, queue[index]);
 			adj.forEach((value) => {
-				//console.log("adj: ", value.x, " ", value.y);
 				value.prev = JSON.parse(JSON.stringify(queue[index]));
 				queue.push(value);
 				if (value.x == departure.x && value.y == departure.y) {
@@ -394,57 +398,10 @@ function init() {
 	//shuffle the ghost's ways
 	function shuffle(ind, array) {
 		let arr = [];
-		let zero = 0, one = 1, two = 2, three = 3;
-		switch (ind) {
-			case 1:
-				zero = 1;
-				one = 2;
-				two = 3;
-				three = 0;
-				break;
-			case 2:
-				zero = 2;
-				one = 3;
-				two = 0;
-				three = 1;
-				break;
-			case 3:
-				zero = 3;
-				one = 0;
-				two = 1;
-				three = 2;
-				break;
-			case 4:
-				zero = 0;
-				one = 2;
-				two = 1;
-				three = 3;
-				break;
-			case 5:
-				zero = 2;
-				one = 0;
-				two = 3;
-				three = 1;
-				break;
-			case 6:
-				zero = 1;
-				one = 3;
-				two = 0;
-				three = 2;
-				break;
-			case 7:
-				zero = 3;
-				one = 1;
-				two = 2;
-				three = 0;
-				break;
-			default: break;
+		let index = ind % 4;
+		for (let i = 0; i < 4; i++) {
+			arr.push(array[(index + i) % 4]);
 		}
-		arr.push(array[zero]);
-		arr.push(array[one]);
-		arr.push(array[two]);
-		arr.push(array[three]);
-
 		return arr;
 	}
 
