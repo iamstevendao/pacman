@@ -9,4 +9,5 @@ Pacman game using HTML5 Canvas and pure Javascript and [Dijkstra's Algorithm](ht
 <p align="center">
 <img alt="Ingame GIF" src="https://thumbs.gfycat.com/FantasticFondBarnowl-size_restricted.gif"/>
 </p>
+
 made with :heart: by [Steven](https://github.com/iamstevendao).
