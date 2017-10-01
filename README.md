@@ -4,7 +4,10 @@
 
 Pacman game using HTML5 Canvas and pure Javascript and [Dijkstra's Algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm)
 
-Check out Demo at [![@repl.it](https://img.shields.io/badge/repl.it-@iamstevendao/pacman-blue.svg)](https://repl.it/Jv9c/34) 
+### Check out [Demo](https://repl.it/Jv9c/34) or [C++ version](https://github.com/iamstevendao/pacman_cpp)
 
-![ingame](https://thumbs.gfycat.com/FantasticFondBarnowl-size_restricted.gif)
+<p align="center">
+<img alt="Ingame GIF" src="https://thumbs.gfycat.com/FantasticFondBarnowl-size_restricted.gif"/>
+</p>
 
+made with :heart: by [Steven](https://github.com/iamstevendao).

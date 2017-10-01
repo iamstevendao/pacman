@@ -241,10 +241,8 @@ function init() {
 	function followPath(ghost) {
 		if (ghost.path[0].x == ghost.x) {
 			ghost.direction = ghost.path[0].y > ghost.y ? DIRECTION.DOWN : DIRECTION.UP;
-			return;
 		} else {
 			ghost.direction = ghost.path[0].x > ghost.x ? DIRECTION.RIGHT : DIRECTION.LEFT;
-			return;
 		}
 	}
 	function controlObject(obj) {
@@ -351,28 +349,31 @@ function init() {
 		return map.some(value => (value.x == x && value.y == y));
 	}
 
-	function findWay(ind, arrival, departure) {
+	function findWay(ind, departure, destination) {
 		//if arrival and departure have a same coordinates, return a blank array
-		if (arrival.x == departure.x && arrival.y == departure.y)
+		if (departure.x == destination.x && departure.y == destination.y)
 			return [];
-		let queue = [];
-		queue.push(arrival);
-		let index = 0;
-		let result = null;
+		//push departure to the queue as the start point
+		let queue = [departure], index = 0, result = null;
+
+		//keep finding a way until get a result
 		while (result == null) {
 			let adj = getAdjacences(ind, queue, queue[index]);
 			adj.forEach((value) => {
+				//deep copy the adjacence and push to queue
 				value.prev = JSON.parse(JSON.stringify(queue[index]));
 				queue.push(value);
-				if (value.x == departure.x && value.y == departure.y) {
+
+				if (value.x == destination.x && value.y == destination.y) {
 					result = value;
 				}
 			});
 			index++;
 		}
+
+		//inverse nextMoves
 		let nextMoves = [];
 		let curr = result;
-
 		do {
 			nextMoves.push({ x: curr.x, y: curr.y });
 			curr = curr.prev;
