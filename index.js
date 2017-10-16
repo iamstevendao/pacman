@@ -39,6 +39,10 @@
   var cherries = []
   var isOpen = false
   var score = 0
+  var ingame = {
+    px: 0,
+    py: 0
+  }
 
   reset()
   setInterval(update, NUMBER.INTERVAL)
@@ -157,34 +161,39 @@
 
   function controlGame () {
     controlObject(pacman)
+    roundCoordinates()
     controlPath()
-
-    ghosts.forEach(value => {
-      controlObject(value)
-    })
-
-    // control score
+    controlGhosts()
     controlScore()
+  }
+
+  function controlGhosts () {
+    ghosts.forEach(value => {
+      controlObject(value);
+    });
+  }
+
+  function roundCoordinates () {
+    ingame.px = Math.round(pacman.x)
+    ingame.py = Math.round(pacman.y)
   }
 
   function controlScore () {
     // pacman crashes ghost
-    checkGhost()
+    hitGhost()
 
     // pacman eats food
-    checkFood()
+    hitFood()
 
     // pacman eats cherry
-    checkCherry()
+    hitCherry()
 
     // check game over
     checkOver()
   }
 
-  function checkGhost () {
-    let x = Math.round(pacman.x)
-    let y = Math.round(pacman.y)
-    let index = isCrashed(ghosts, x, y)
+  function hitGhost () {
+    let index = isCrashed(ghosts, ingame.px, ingame.py)
     if (index !== -1) {
       if (pacman.power < 0) { reset() } else {
         ghosts.splice(index, 1)
@@ -192,21 +201,17 @@
       }
     }
   }
-  function checkFood () {
-    let x = Math.round(pacman.x)
-    let y = Math.round(pacman.y)
 
-    let index = isCrashed(food, x, y)
+  function hitFood () {
+    let index = isCrashed(food, ingame.px, ingame.py)
     if (index !== -1) {
       score++
       food.splice(index, 1)
     }
   }
 
-  function checkCherry () {
-    let x = Math.round(pacman.x)
-    let y = Math.round(pacman.y)
-    let index = isCrashed(cherries, x, y)
+  function hitCherry () {
+    let index = isCrashed(cherries, ingame.px, ingame.py)
     if (index !== -1) {
       pacman.power = NUMBER.INTERVAL * NUMBER.POWER
       cherries.splice(index, 1)
@@ -215,23 +220,21 @@
   }
 
   function checkOver () {
-    if (food.length === 0 || ghosts.length === 0) {
+    if (!food.length || !ghosts.length)
       reset()
-    }
   }
 
   function reachCherry (obj) {
     return obj.x === cherries[obj.target].x && obj.y === cherries[obj.target].y
   }
+
   // object go to a specific point
   function controlPath () {
     ghosts.forEach((ghost, index) => {
-      let px = Math.round(pacman.x)
-      let py = Math.round(pacman.y)
       let gx = Math.round(ghost.x)
       let gy = Math.round(ghost.y)
       if (ghost.target === -1) {
-        ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: px, y: py })
+        ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: ingame.px, y: ingame.py })
       } else {
         // generate new target
         if (ghost.path == null || ghost.target >= cherries.length || reachCherry(ghost)) {
@@ -339,12 +342,10 @@
   // return the array of directions that a ghost is able to turn in the next move
   function whereCanGo (obj) {
     let direction = []
-    // console.log("iscrashed: ", isCrashed(map, obj.x, obj.y - 1))
     if (isCrashed(map, obj.x + 1, obj.y) === -1) { direction.push(DIRECTION.RIGHT) }
     if (isCrashed(map, obj.x - 1, obj.y) === -1) { direction.push(DIRECTION.LEFT) }
     if (isCrashed(map, obj.x, obj.y - 1) === -1) { direction.push(DIRECTION.UP) }
     if (isCrashed(map, obj.x, obj.y + 1) === -1) { direction.push(DIRECTION.DOWN) }
-    // console.log("direction: ", direction);
     return direction
   }
 
@@ -527,15 +528,18 @@
       pushIntoMap({ x: i, y: 11 })
     }
   }
+
   function generateOthers (x, y) {
     pushIntoMap({ x: x, y: y })
     pushIntoMap({ x: SIZE.GRID - x - 1, y: y })
     pushIntoMap({ x: x, y: SIZE.GRID - y - 1 })
     pushIntoMap({ x: SIZE.GRID - x - 1, y: SIZE.GRID - y - 1 })
   }
+
   function pushIntoMap (value) {
     map.push({ x: value.x, y: value.y })
   }
+
   function drawFood () {
     food.forEach(value => {
       drawElement(ELEMENT.FOOD, value)
@@ -609,19 +613,19 @@
     switch (e.keyCode) {
       case 37:
         pacman.direction = DIRECTION.LEFT
-        pacman.y = Math.round(pacman.y)
+        pacman.y = ingame.py
         break
       case 38:
         pacman.direction = DIRECTION.UP
-        pacman.x = Math.round(pacman.x)
+        pacman.x = ingame.px
         break
       case 39:
         pacman.direction = DIRECTION.RIGHT
-        pacman.y = Math.round(pacman.y)
+        pacman.y = ingame.py
         break
       case 40:
         pacman.direction = DIRECTION.DOWN
-        pacman.x = Math.round(pacman.x)
+        pacman.x = ingame.px
         break
     }
   }
