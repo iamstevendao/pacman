@@ -33,6 +33,7 @@
   const GHOST_AREA = { x: 7, y: 8, w: 5, h: 3 }
   const DIRECTION = { LEFT: 'left', RIGHT: 'right', UP: 'up', DOWN: 'down' }
   // endregion
+
   // region: declare variable
   var pacman = {}
   var map = []
@@ -46,18 +47,13 @@
     py: 0
   }
   // endregion
+
   // region: start game
   reset()
   setInterval(update, NUMBER.INTERVAL)
   // endregion
 
-  function setWindowSize () {
-    let w = window.innerWidth
-    let h = window.innerHeight
-    canvas.width = w > h ? h : w
-    canvas.height = canvas.width
-  }
-
+  // region: game flow
   function update () {
     draw()
     controlGame()
@@ -76,7 +72,6 @@
 
   function controlGame () { // control every elements in the game
     controlObject(pacman)
-    roundCoordinates()
     controlPath()
     controlGhosts()
     controlScore()
@@ -102,15 +97,7 @@
     generateCherry()
     generateGhosts()
   }
-
-  function isContained (arr, obj) {
-    return arr.some(value => (value.x === obj.x && value.y === obj.y))
-  }
-
-  function randomProperty (obj) {
-    let keys = Object.keys(obj)
-    return obj[keys[random(keys.length)]]
-  }
+  // endregion
 
   // region: generate elements
   function generateGhosts () {
@@ -188,33 +175,7 @@
   }
   // endregion
 
-  // simplify the random function
-  function random (x) {
-    return Math.floor(Math.random() * x)
-  }
-
-  function controlGhosts () {
-    ghosts.forEach(value => {
-      controlObject(value)
-    })
-  }
-
-  function roundCoordinates () {
-    ingame.px = Math.round(pacman.x)
-    ingame.py = Math.round(pacman.y)
-  }
-
-  function controlScore () {
-    // pacman eats food
-    hitFood()
-    // pacman crashes ghost
-    hitGhost()
-    // pacman eats cherry
-    hitCherry()
-    // check game over
-    checkOver()
-  }
-
+  // region: control score
   function hitGhost () {
     let index = isHitGhost()
     if (index === -1) { return }
@@ -244,12 +205,26 @@
   function checkOver () {
     if (!food.length || !ghosts.length) { reset() }
   }
+  // endregion
 
-  function reachCherry (obj) {
-    return obj.x === cherries[obj.target].x && obj.y === cherries[obj.target].y
+  // region: control game
+  function controlGhosts () {
+    ghosts.forEach(value => {
+      controlObject(value)
+    })
   }
 
-  // object go to a specific point
+  function controlScore () {
+    // pacman eats food
+    hitFood()
+    // pacman crashes ghost
+    hitGhost()
+    // pacman eats cherry
+    hitCherry()
+    // check game over
+    checkOver()
+  }
+
   function controlPath () {
     ghosts.forEach((ghost, index) => {
       let gx = Math.round(ghost.x)
@@ -265,15 +240,6 @@
         ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: cherry.x, y: cherry.y })
       }
     })
-  }
-
-  // follow the path
-  function followPath (ghost) {
-    if (ghost.path[0].x === ghost.x) {
-      ghost.direction = ghost.path[0].y > ghost.y ? DIRECTION.DOWN : DIRECTION.UP
-    } else {
-      ghost.direction = ghost.path[0].x > ghost.x ? DIRECTION.RIGHT : DIRECTION.LEFT
-    }
   }
 
   function controlObject (obj) {
@@ -339,60 +305,16 @@
         break
     }
 
+    // update round coordinates of pacman
+    roundCoordinates()
+
     function isPossible (x) {
       return possibleDirection.indexOf(x) !== -1
     }
   }
+  // endregion
 
-  // return the oposite direction
-  function opositeOf (x) {
-    switch (x) {
-      case DIRECTION.LEFT:
-        return DIRECTION.RIGHT
-      case DIRECTION.RIGHT:
-        return DIRECTION.LEFT
-      case DIRECTION.UP:
-        return DIRECTION.DOWN
-      case DIRECTION.DOWN:
-        return DIRECTION.UP
-    }
-  }
-
-  // return the array of directions that a ghost is able to turn in the next move
-  function whereCanGo (obj) {
-    let direction = []
-    if (isCrashed(map, obj.x + 1, obj.y) === -1) { direction.push(DIRECTION.RIGHT) }
-    if (isCrashed(map, obj.x - 1, obj.y) === -1) { direction.push(DIRECTION.LEFT) }
-    if (isCrashed(map, obj.x, obj.y - 1) === -1) { direction.push(DIRECTION.UP) }
-    if (isCrashed(map, obj.x, obj.y + 1) === -1) { direction.push(DIRECTION.DOWN) }
-    return direction
-  }
-
-  // check if 2 elements are about to crash in the next move
-  // returns -1 if not crash
-  // return the index of the element in the array if crash
-  function isCrashed (arr, x, y) {
-    for (let ele in arr) {
-      if (arr[ele].x === x && arr[ele].y === y) { return ele }
-    }
-    return -1
-  }
-
-  function isHitGhost () {
-    let x = pacman.x
-    let y = pacman.y
-    for (let ele in ghosts) {
-      let ex = ghosts[ele].x
-      let ey = ghosts[ele].y
-      let condition = (Math.ceil(ex) === Math.ceil(x) &&
-        Math.ceil(ey) === Math.ceil(y)) ||
-        (Math.floor(ex) === Math.floor(x) &&
-          Math.floor(ey) === Math.floor(y))
-      if (condition) { return ele }
-    }
-    return -1
-  }
-
+  // region: Dijkstra's Algorithm
   // find the shortest way to the target
   function findWay (ind, departure, destination) {
     // if arrival and departure have a same coordinates, return a blank array
@@ -447,74 +369,7 @@
     }
     return arr
   }
-
-  // get position of pacman's eyes
-  function getEye () {
-    let eye = {}
-    const base = { x: pacman.x * SIZE.BLOCK, y: pacman.y * SIZE.BLOCK }
-    switch (pacman.direction) {
-      case DIRECTION.RIGHT:
-      case DIRECTION.LEFT:
-        eye.x = base.x + SIZE.BLOCK / 2
-        eye.y = base.y + SIZE.BLOCK / 4
-        break
-      case DIRECTION.UP:
-        eye.x = base.x + SIZE.BLOCK / 4
-        eye.y = base.y + SIZE.BLOCK / 2
-        break
-      case DIRECTION.DOWN:
-        eye.x = base.x + SIZE.BLOCK * 3 / 4
-        eye.y = base.y + SIZE.BLOCK / 2
-        break
-    }
-    return eye
-  }
-
-  // get angle of 2 arches of pacman
-  function getAngle () {
-    let angle = { startMouth: Math.PI, endMouth: Math.PI, startHead: Math.PI, endHead: Math.PI }
-    if (!isOpen) {
-      angle.startMouth = 0
-      angle.endHead = 0
-      return angle
-    }
-    let mouth = 0
-    let head = 0
-    switch (pacman.direction) {
-      case DIRECTION.RIGHT:
-        mouth = 0.25
-        head = 0.75
-        break
-      case DIRECTION.LEFT:
-        mouth = 1.75
-        head = 1.25
-        break
-      case DIRECTION.UP:
-        mouth = 0.25
-        head = 1.75
-        break
-      case DIRECTION.DOWN:
-        mouth = 0.75
-        head = 1.25
-        break
-    }
-    angle.startMouth *= mouth
-    angle.endMouth *= mouth > 1 ? mouth - 1 : mouth + 1
-    angle.startHead *= head
-    angle.endHead *= head > 1 ? head - 1 : head + 1
-    return angle
-  }
-
-  function generateOthers (x, y) {
-    pushIntoMap({ x: x, y: y })
-    pushIntoMap({ x: SIZE.GRID - x - 1, y: y })
-    pushIntoMap({ x: x, y: SIZE.GRID - y - 1 })
-    pushIntoMap({ x: SIZE.GRID - x - 1, y: SIZE.GRID - y - 1 })
-  }
-
-  function pushIntoMap (value) {
-    map.push({ x: value.x, y: value.y })
-  }
+  // endregion
 
   // region: draw
   function drawPacman () {
@@ -642,6 +497,166 @@
   }
   // endregion
 
+  // region: utils
+  // set width = height = the shortest dimension of the browser window
+  function setWindowSize () {
+    let w = window.innerWidth
+    let h = window.innerHeight
+    canvas.width = w > h ? h : w
+    canvas.height = canvas.width
+  }
+
+  function isContained (arr, obj) {
+    return arr.some(value => (value.x === obj.x && value.y === obj.y))
+  }
+
+  // simplify the random function
+  function random (x) {
+    return Math.floor(Math.random() * x)
+  }
+
+  function reachCherry (obj) {
+    return obj.x === cherries[obj.target].x && obj.y === cherries[obj.target].y
+  }
+
+  // follow the path
+  function followPath (ghost) {
+    if (ghost.path[0].x === ghost.x) {
+      ghost.direction = ghost.path[0].y > ghost.y ? DIRECTION.DOWN : DIRECTION.UP
+    } else {
+      ghost.direction = ghost.path[0].x > ghost.x ? DIRECTION.RIGHT : DIRECTION.LEFT
+    }
+  }
+
+  // return the oposite direction
+  function opositeOf (x) {
+    switch (x) {
+      case DIRECTION.LEFT:
+        return DIRECTION.RIGHT
+      case DIRECTION.RIGHT:
+        return DIRECTION.LEFT
+      case DIRECTION.UP:
+        return DIRECTION.DOWN
+      case DIRECTION.DOWN:
+        return DIRECTION.UP
+    }
+  }
+
+  // return the array of directions that a ghost is able to turn in the next move
+  function whereCanGo (obj) {
+    let direction = []
+    if (isCrashed(map, obj.x + 1, obj.y) === -1) { direction.push(DIRECTION.RIGHT) }
+    if (isCrashed(map, obj.x - 1, obj.y) === -1) { direction.push(DIRECTION.LEFT) }
+    if (isCrashed(map, obj.x, obj.y - 1) === -1) { direction.push(DIRECTION.UP) }
+    if (isCrashed(map, obj.x, obj.y + 1) === -1) { direction.push(DIRECTION.DOWN) }
+    return direction
+  }
+
+  function isHitGhost () {
+    let x = pacman.x
+    let y = pacman.y
+    for (let ele in ghosts) {
+      let ex = ghosts[ele].x
+      let ey = ghosts[ele].y
+      let condition = (Math.ceil(ex) === Math.ceil(x) &&
+        Math.ceil(ey) === Math.ceil(y)) ||
+        (Math.floor(ex) === Math.floor(x) &&
+          Math.floor(ey) === Math.floor(y))
+      if (condition) { return ele }
+    }
+    return -1
+  }
+
+  // check if 2 elements are about to crash in the next move
+  // returns -1 if not crash
+  // return the index of the element in the array if crash
+  function isCrashed (arr, x, y) {
+    for (let ele in arr) {
+      if (arr[ele].x === x && arr[ele].y === y) { return ele }
+    }
+    return -1
+  }
+
+  function randomProperty (obj) {
+    let keys = Object.keys(obj)
+    return obj[keys[random(keys.length)]]
+  }
+
+  function roundCoordinates () {
+    ingame.px = Math.round(pacman.x)
+    ingame.py = Math.round(pacman.y)
+  }
+
+  // get position of pacman's eyes
+  function getEye () {
+    let eye = {}
+    const base = { x: pacman.x * SIZE.BLOCK, y: pacman.y * SIZE.BLOCK }
+    switch (pacman.direction) {
+      case DIRECTION.RIGHT:
+      case DIRECTION.LEFT:
+        eye.x = base.x + SIZE.BLOCK / 2
+        eye.y = base.y + SIZE.BLOCK / 4
+        break
+      case DIRECTION.UP:
+        eye.x = base.x + SIZE.BLOCK / 4
+        eye.y = base.y + SIZE.BLOCK / 2
+        break
+      case DIRECTION.DOWN:
+        eye.x = base.x + SIZE.BLOCK * 3 / 4
+        eye.y = base.y + SIZE.BLOCK / 2
+        break
+    }
+    return eye
+  }
+
+  // get angle of 2 arches of pacman
+  function getAngle () {
+    let angle = { startMouth: Math.PI, endMouth: Math.PI, startHead: Math.PI, endHead: Math.PI }
+    if (!isOpen) {
+      angle.startMouth = 0
+      angle.endHead = 0
+      return angle
+    }
+    let mouth = 0
+    let head = 0
+    switch (pacman.direction) {
+      case DIRECTION.RIGHT:
+        mouth = 0.25
+        head = 0.75
+        break
+      case DIRECTION.LEFT:
+        mouth = 1.75
+        head = 1.25
+        break
+      case DIRECTION.UP:
+        mouth = 0.25
+        head = 1.75
+        break
+      case DIRECTION.DOWN:
+        mouth = 0.75
+        head = 1.25
+        break
+    }
+    angle.startMouth *= mouth
+    angle.endMouth *= mouth > 1 ? mouth - 1 : mouth + 1
+    angle.startHead *= head
+    angle.endHead *= head > 1 ? head - 1 : head + 1
+    return angle
+  }
+
+  function generateOthers (x, y) {
+    pushIntoMap({ x: x, y: y })
+    pushIntoMap({ x: SIZE.GRID - x - 1, y: y })
+    pushIntoMap({ x: x, y: SIZE.GRID - y - 1 })
+    pushIntoMap({ x: SIZE.GRID - x - 1, y: SIZE.GRID - y - 1 })
+  }
+
+  function pushIntoMap (value) {
+    map.push({ x: value.x, y: value.y })
+  }
+  // endregion
+
+  // region: keypress event
   document.onkeydown = function (e) {
     switch (e.keyCode) {
       case 37:
@@ -662,4 +677,5 @@
         break
     }
   }
+  // endregion
 })()
