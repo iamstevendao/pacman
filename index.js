@@ -502,7 +502,7 @@
   function setWindowSize () {
     let w = window.innerWidth
     let h = window.innerHeight
-    canvas.width = w > h ? h : w
+    canvas.width = w > h ? h - 150 : w - 150
     canvas.height = canvas.width
   }
 
