@@ -29,9 +29,24 @@
     POWER: 50,
     INTERVAL: 100
   }
-  const ELEMENT = { FOOD: 'food', BLOCK: 'block', CHERRY: 'cherry', GHOST: 'ghost' }
-  const GHOST_AREA = { x: 7, y: 8, w: 5, h: 3 }
-  const DIRECTION = { LEFT: 'left', RIGHT: 'right', UP: 'up', DOWN: 'down' }
+  const ELEMENT = {
+    FOOD: 'food',
+    BLOCK: 'block',
+    CHERRY: 'cherry',
+    GHOST: 'ghost'
+  }
+  const GHOST_AREA = {
+    x: 7,
+    y: 8,
+    w: 5,
+    h: 3
+  }
+  const DIRECTION = {
+    LEFT: 'left',
+    RIGHT: 'right',
+    UP: 'up',
+    DOWN: 'down'
+  }
   // endregion
 
   // region: declare variable
@@ -54,12 +69,12 @@
   // endregion
 
   // region: game flow
-  function update () {
+  function update() {
     draw()
     controlGame()
   }
 
-  function draw () { // draw every elements in the game
+  function draw() { // draw every elements in the game
     drawBackground()
     drawMap()
     drawPath()
@@ -70,28 +85,33 @@
     drawScore()
   }
 
-  function controlGame () { // control every elements in the game
+  function controlGame() { // control every elements in the game
     controlObject(pacman)
     controlPath()
     controlGhosts()
     controlScore()
   }
 
-  function reset () { // reset game
+  function reset() { // reset game
     toDefault()
     generateElements()
   }
 
-  function toDefault () {
+  function toDefault() {
     score = 0
     map = []
     food = []
     ghosts = []
     cherries = []
-    pacman = { x: 1, y: 1, direction: 'right', power: 0 }
+    pacman = {
+      x: 1,
+      y: 1,
+      direction: 'right',
+      power: 0
+    }
   }
 
-  function generateElements () {
+  function generateElements() {
     generateMap()
     generateFood()
     generateCherry()
@@ -100,22 +120,31 @@
   // endregion
 
   // region: generate elements
-  function generateGhosts () {
+  function generateGhosts() {
     for (let i = 0; i < NUMBER.GHOST; i++) {
       let x = random(GHOST_AREA.w) + GHOST_AREA.x
       let y = random(GHOST_AREA.h) + GHOST_AREA.y
       let direction = randomProperty(DIRECTION)
       let color = randomProperty(COLOR.GHOST)
       let path = []
-      ghosts.push({ x: x, y: y, color: color, direction: direction, path: path })
+      ghosts.push({
+        x: x,
+        y: y,
+        color: color,
+        direction: direction,
+        path: path
+      })
       generateTarget(ghosts[ghosts.length - 1])
     }
   }
 
-  function generateFood () {
+  function generateFood() {
     for (let i = 0; i < SIZE.GRID; i++) {
       for (let j = 0; j < SIZE.GRID; j++) {
-        let foo = { x: i, y: j }
+        let foo = {
+          x: i,
+          y: j
+        }
         if (!isContained(map, foo)) {
           food.push(foo)
         }
@@ -123,7 +152,7 @@
     }
   }
 
-  function generateTarget (obj) {
+  function generateTarget(obj) {
     obj.path = []
     if (cherries.length <= 0) {
       obj.target = -1
@@ -132,7 +161,7 @@
     obj.target = random(NUMBER.GHOST) > NUMBER.GHOST / 4 ? -1 : random(cherries.length)
   }
 
-  function generateCherry () {
+  function generateCherry() {
     while (cherries.length < NUMBER.CHERRY) {
       let index = random(food.length)
       let cher = food[index]
@@ -142,7 +171,8 @@
       }
     }
   }
-  function generateMap () {
+
+  function generateMap() {
     for (let i = 0; i < SIZE.GRID / 2; i++) {
       generateOthers(i, 0)
     }
@@ -167,18 +197,29 @@
     generateOthers(7, 7)
     generateOthers(6, 7)
     generateOthers(6, 8)
-    pushIntoMap({ x: 6, y: 9 })
-    pushIntoMap({ x: SIZE.GRID - 6 - 1, y: 9 })
+    pushIntoMap({
+      x: 6,
+      y: 9
+    })
+    pushIntoMap({
+      x: SIZE.GRID - 6 - 1,
+      y: 9
+    })
     for (let i = 8; i < 8 + 3; i++) {
-      pushIntoMap({ x: i, y: 11 })
+      pushIntoMap({
+        x: i,
+        y: 11
+      })
     }
   }
   // endregion
 
   // region: control score
-  function hitGhost () {
+  function hitGhost() {
     let index = isHitGhost()
-    if (index === -1) { return }
+    if (index === -1) {
+      return
+    }
     if (pacman.power < 0) {
       reset()
     } else {
@@ -187,34 +228,40 @@
     }
   }
 
-  function hitFood () {
+  function hitFood() {
     let index = isCrashed(food, ingame.px, ingame.py)
-    if (index === -1) { return }
+    if (index === -1) {
+      return
+    }
     score++
     food.splice(index, 1)
   }
 
-  function hitCherry () {
+  function hitCherry() {
     let index = isCrashed(cherries, ingame.px, ingame.py)
-    if (index === -1) { return }
+    if (index === -1) {
+      return
+    }
     pacman.power = NUMBER.INTERVAL * NUMBER.POWER
     cherries.splice(index, 1)
     score += 5
   }
 
-  function checkOver () {
-    if (!food.length || !ghosts.length) { reset() }
+  function checkOver() {
+    if (!food.length || !ghosts.length) {
+      reset()
+    }
   }
   // endregion
 
   // region: control game
-  function controlGhosts () {
+  function controlGhosts() {
     ghosts.forEach(value => {
       controlObject(value)
     })
   }
 
-  function controlScore () {
+  function controlScore() {
     // pacman eats food
     hitFood()
     // pacman crashes ghost
@@ -225,24 +272,38 @@
     checkOver()
   }
 
-  function controlPath () {
+  function controlPath() {
     ghosts.forEach((ghost, index) => {
       let gx = Math.round(ghost.x)
       let gy = Math.round(ghost.y)
       if (ghost.target === -1) {
-        ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: ingame.px, y: ingame.py })
+        ghost.path = findWay(index, {
+          x: gx,
+          y: gy,
+          prev: null
+        }, {
+          x: ingame.px,
+          y: ingame.py
+        })
       } else {
         // generate new target
         if (ghost.path == null || ghost.target >= cherries.length || reachCherry(ghost)) {
           ghost.target = random(cherries.length)
         }
         let cherry = cherries[ghost.target]
-        ghost.path = findWay(index, { x: gx, y: gy, prev: null }, { x: cherry.x, y: cherry.y })
+        ghost.path = findWay(index, {
+          x: gx,
+          y: gy,
+          prev: null
+        }, {
+          x: cherry.x,
+          y: cherry.y
+        })
       }
     })
   }
 
-  function controlObject (obj) {
+  function controlObject(obj) {
     let index = 0
     let possibleDirection = whereCanGo(obj)
 
@@ -260,7 +321,9 @@
       } else {
         // if the object still go ahead, remove the oposite direction
         if (isPossible(obj.direction)) {
-          if ((index = possibleDirection.indexOf(opositeOf(obj.direction))) !== -1) { possibleDirection.splice(index, 1) }
+          if ((index = possibleDirection.indexOf(opositeOf(obj.direction))) !== -1) {
+            possibleDirection.splice(index, 1)
+          }
         }
         // if the ghost is at the center of a block, random a new direction
         // otherwise just follow the current path
@@ -308,7 +371,7 @@
     // update round coordinates of pacman
     roundCoordinates()
 
-    function isPossible (x) {
+    function isPossible(x) {
       return possibleDirection.indexOf(x) !== -1
     }
   }
@@ -316,9 +379,11 @@
 
   // region: Dijkstra's Algorithm
   // find the shortest way to the target
-  function findWay (ind, departure, destination) {
+  function findWay(ind, departure, destination) {
     // if arrival and departure have a same coordinates, return a blank array
-    if (departure.x === destination.x && departure.y === destination.y) { return [] }
+    if (departure.x === destination.x && departure.y === destination.y) {
+      return []
+    }
     // push departure to the queue as the start point
     let queue = [departure]
     let index = 0
@@ -343,7 +408,10 @@
     let nextMoves = []
     let curr = result
     do {
-      nextMoves.push({ x: curr.x, y: curr.y })
+      nextMoves.push({
+        x: curr.x,
+        y: curr.y
+      })
       curr = curr.prev
     } while (curr != null)
 
@@ -351,17 +419,30 @@
   }
 
   // get all possible next moves
-  function getAdjacences (ind, queue, point) {
+  function getAdjacences(ind, queue, point) {
     if (typeof point !== 'undefined') {
-      let adj = shuffle(ind, [{ x: point.x, y: point.y - 1 }, { x: point.x, y: point.y + 1 }, { x: point.x - 1, y: point.y }, { x: point.x + 1, y: point.y }])
+      let adj = shuffle(ind, [{
+        x: point.x,
+        y: point.y - 1
+      }, {
+        x: point.x,
+        y: point.y + 1
+      }, {
+        x: point.x - 1,
+        y: point.y
+      }, {
+        x: point.x + 1,
+        y: point.y
+      }])
       return adj.filter((value) =>
-        ((value.x >= 1 && value.x < SIZE.GRID && value.y < SIZE.GRID && value.y >= 1 && !isContained(map, value) && !isContained(queue, value))
-        ))
-    } else { return [] }
+        ((value.x >= 1 && value.x < SIZE.GRID && value.y < SIZE.GRID && value.y >= 1 && !isContained(map, value) && !isContained(queue, value))))
+    } else {
+      return []
+    }
   }
 
   // shuffle the ghost's ways
-  function shuffle (ind, array) {
+  function shuffle(ind, array) {
     let arr = []
     let index = ind % 4
     for (let i = 0; i < 4; i++) {
@@ -372,7 +453,7 @@
   // endregion
 
   // region: draw
-  function drawPacman () {
+  function drawPacman() {
     let color = pacman.power < 0 ? COLOR.PACMAN : COLOR.POWER
     let margin = pacman.power < 0 ? MARGIN_PACMAN : 0
     let angle = getAngle()
@@ -400,13 +481,13 @@
     ctx.fill()
   }
 
-  function drawScore () {
+  function drawScore() {
     ctx.fillStyle = COLOR.FOOD
     ctx.font = '20px Monaco'
     ctx.fillText('Score: ' + score, 0, SIZE.BLOCK)
   }
 
-  function drawPath () {
+  function drawPath() {
     if (pacman.power <= 0) {
       ghosts.forEach((value) => {
         value.path.forEach((path) => {
@@ -417,34 +498,36 @@
     }
   }
 
-  function drawCherries () {
+  function drawCherries() {
     cherries.forEach(cherry => {
       drawElement(ELEMENT.CHERRY, cherry)
     })
   }
 
-  function drawGhosts () {
-    ghosts.forEach(value => { drawElement(ELEMENT.GHOST, value) })
+  function drawGhosts() {
+    ghosts.forEach(value => {
+      drawElement(ELEMENT.GHOST, value)
+    })
   }
 
-  function drawFood () {
+  function drawFood() {
     food.forEach(value => {
       drawElement(ELEMENT.FOOD, value)
     })
   }
 
-  function drawBackground () {
+  function drawBackground() {
     ctx.fillStyle = COLOR.BACKGROUND
     ctx.fillRect(0, 0, w, w)
   }
 
-  function drawMap () {
+  function drawMap() {
     map.forEach(value => {
       drawElement(ELEMENT.BLOCK, value)
     })
   }
 
-  function drawElement (ele, obj) {
+  function drawElement(ele, obj) {
     let x = obj.x * SIZE.BLOCK
     let y = obj.y * SIZE.BLOCK
     switch (ele) {
@@ -499,28 +582,31 @@
 
   // region: utils
   // set width = height = the shortest dimension of the browser window
-  function setWindowSize () {
+  function setWindowSize() {
     let w = window.innerWidth
     let h = window.innerHeight
     canvas.width = w > h ? h - 150 : w - 150
     canvas.height = canvas.width
+    console.log(canvas)
+    canvas.style.left = (w - canvas.width) / 2 + 'px'
+    canvas.style.position = "absolute"
   }
 
-  function isContained (arr, obj) {
+  function isContained(arr, obj) {
     return arr.some(value => (value.x === obj.x && value.y === obj.y))
   }
 
   // simplify the random function
-  function random (x) {
+  function random(x) {
     return Math.floor(Math.random() * x)
   }
 
-  function reachCherry (obj) {
+  function reachCherry(obj) {
     return obj.x === cherries[obj.target].x && obj.y === cherries[obj.target].y
   }
 
   // follow the path
-  function followPath (ghost) {
+  function followPath(ghost) {
     if (ghost.path[0].x === ghost.x) {
       ghost.direction = ghost.path[0].y > ghost.y ? DIRECTION.DOWN : DIRECTION.UP
     } else {
@@ -529,7 +615,7 @@
   }
 
   // return the oposite direction
-  function opositeOf (x) {
+  function opositeOf(x) {
     switch (x) {
       case DIRECTION.LEFT:
         return DIRECTION.RIGHT
@@ -543,26 +629,36 @@
   }
 
   // return the array of directions that a ghost is able to turn in the next move
-  function whereCanGo (obj) {
+  function whereCanGo(obj) {
     let direction = []
-    if (isCrashed(map, obj.x + 1, obj.y) === -1) { direction.push(DIRECTION.RIGHT) }
-    if (isCrashed(map, obj.x - 1, obj.y) === -1) { direction.push(DIRECTION.LEFT) }
-    if (isCrashed(map, obj.x, obj.y - 1) === -1) { direction.push(DIRECTION.UP) }
-    if (isCrashed(map, obj.x, obj.y + 1) === -1) { direction.push(DIRECTION.DOWN) }
+    if (isCrashed(map, obj.x + 1, obj.y) === -1) {
+      direction.push(DIRECTION.RIGHT)
+    }
+    if (isCrashed(map, obj.x - 1, obj.y) === -1) {
+      direction.push(DIRECTION.LEFT)
+    }
+    if (isCrashed(map, obj.x, obj.y - 1) === -1) {
+      direction.push(DIRECTION.UP)
+    }
+    if (isCrashed(map, obj.x, obj.y + 1) === -1) {
+      direction.push(DIRECTION.DOWN)
+    }
     return direction
   }
 
-  function isHitGhost () {
+  function isHitGhost() {
     let x = pacman.x
     let y = pacman.y
     for (let ele in ghosts) {
       let ex = ghosts[ele].x
       let ey = ghosts[ele].y
       let condition = (Math.ceil(ex) === Math.ceil(x) &&
-        Math.ceil(ey) === Math.ceil(y)) ||
+          Math.ceil(ey) === Math.ceil(y)) ||
         (Math.floor(ex) === Math.floor(x) &&
           Math.floor(ey) === Math.floor(y))
-      if (condition) { return ele }
+      if (condition) {
+        return ele
+      }
     }
     return -1
   }
@@ -570,27 +666,32 @@
   // check if 2 elements are about to crash in the next move
   // returns -1 if not crash
   // return the index of the element in the array if crash
-  function isCrashed (arr, x, y) {
+  function isCrashed(arr, x, y) {
     for (let ele in arr) {
-      if (arr[ele].x === x && arr[ele].y === y) { return ele }
+      if (arr[ele].x === x && arr[ele].y === y) {
+        return ele
+      }
     }
     return -1
   }
 
-  function randomProperty (obj) {
+  function randomProperty(obj) {
     let keys = Object.keys(obj)
     return obj[keys[random(keys.length)]]
   }
 
-  function roundCoordinates () {
+  function roundCoordinates() {
     ingame.px = Math.round(pacman.x)
     ingame.py = Math.round(pacman.y)
   }
 
   // get position of pacman's eyes
-  function getEye () {
+  function getEye() {
     let eye = {}
-    const base = { x: pacman.x * SIZE.BLOCK, y: pacman.y * SIZE.BLOCK }
+    const base = {
+      x: pacman.x * SIZE.BLOCK,
+      y: pacman.y * SIZE.BLOCK
+    }
     switch (pacman.direction) {
       case DIRECTION.RIGHT:
       case DIRECTION.LEFT:
@@ -610,8 +711,13 @@
   }
 
   // get angle of 2 arches of pacman
-  function getAngle () {
-    let angle = { startMouth: Math.PI, endMouth: Math.PI, startHead: Math.PI, endHead: Math.PI }
+  function getAngle() {
+    let angle = {
+      startMouth: Math.PI,
+      endMouth: Math.PI,
+      startHead: Math.PI,
+      endHead: Math.PI
+    }
     if (!isOpen) {
       angle.startMouth = 0
       angle.endHead = 0
@@ -644,15 +750,30 @@
     return angle
   }
 
-  function generateOthers (x, y) {
-    pushIntoMap({ x: x, y: y })
-    pushIntoMap({ x: SIZE.GRID - x - 1, y: y })
-    pushIntoMap({ x: x, y: SIZE.GRID - y - 1 })
-    pushIntoMap({ x: SIZE.GRID - x - 1, y: SIZE.GRID - y - 1 })
+  function generateOthers(x, y) {
+    pushIntoMap({
+      x: x,
+      y: y
+    })
+    pushIntoMap({
+      x: SIZE.GRID - x - 1,
+      y: y
+    })
+    pushIntoMap({
+      x: x,
+      y: SIZE.GRID - y - 1
+    })
+    pushIntoMap({
+      x: SIZE.GRID - x - 1,
+      y: SIZE.GRID - y - 1
+    })
   }
 
-  function pushIntoMap (value) {
-    map.push({ x: value.x, y: value.y })
+  function pushIntoMap(value) {
+    map.push({
+      x: value.x,
+      y: value.y
+    })
   }
   // endregion
 
