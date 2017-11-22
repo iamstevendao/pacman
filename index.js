@@ -2,13 +2,13 @@
   // region: initialize constants
   const canvas = document.getElementById('root')
   const ctx = canvas.getContext('2d')
-  setWindowSize()
+  setCanvasStyle()
   const w = canvas.width
   const MARGIN_PACMAN = 1
   const STEP = 5
   const COLOR = {
     BACKGROUND: '#000000',
-    PACMAN: '#990000',
+    PACMAN: '#EA1B21',
     POWER: '#ff0000',
     MAP: '#000099',
     FOOD: '#ffffff',
@@ -122,17 +122,19 @@
   // region: generate elements
   function generateGhosts() {
     for (let i = 0; i < NUMBER.GHOST; i++) {
+      // randomize ghost's properties
       let x = random(GHOST_AREA.w) + GHOST_AREA.x
       let y = random(GHOST_AREA.h) + GHOST_AREA.y
       let direction = randomProperty(DIRECTION)
       let color = randomProperty(COLOR.GHOST)
       let path = []
+      // add ghost to array
       ghosts.push({
-        x: x,
-        y: y,
-        color: color,
-        direction: direction,
-        path: path
+        x,
+        y,
+        color,
+        direction,
+        path
       })
       generateTarget(ghosts[ghosts.length - 1])
     }
@@ -582,12 +584,11 @@
 
   // region: utils
   // set width = height = the shortest dimension of the browser window
-  function setWindowSize() {
+  function setCanvasStyle() {
     let w = window.innerWidth
     let h = window.innerHeight
     canvas.width = w > h ? h - 150 : w - 150
     canvas.height = canvas.width
-    console.log(canvas)
     canvas.style.left = (w - canvas.width) / 2 + 'px'
     canvas.style.position = "absolute"
   }
